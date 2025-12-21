@@ -1,0 +1,152 @@
+error:
+  world_create_failed: "Your world could not be created."
+
+game:
+  build_time_remaining: "%d minutes of build time left."
+  build_phase_end: "Build phase ended."
+  race_start: "The race begins! Good luck."
+  reset: "Game has been reset."
+
+tools:
+  only_players: "Only players can receive tools."
+  no_game: "No game is running."
+  header: "--- Available tools ---"
+  unknown: "Unknown tool. Use: /castlerush help tools"
+  received: "Received %s Tool."
+  display: "Shown as %s"
+
+  start:
+    name: "Start"
+    cmd: "/castlerush tools start - Start tool"
+    info: "Right-click a block to set the start."
+    display: "Emerald Block"
+
+  end:
+    name: "End"
+    cmd: "/castlerush tools end - End tool"
+    info: "Right-click a block to set the end."
+    display: "Diamond Block"
+
+  checkpoint:
+    name: "Checkpoint"
+    cmd: "/castlerush tools checkpoint - Checkpoint tool"
+    info: "Right-click a block to set a checkpoint."
+    display: "Gold Block"
+
+  deathzone:
+    name: "Deathzone"
+    cmd: "/castlerush tools deathzone - Deathzone tool"
+    info: "Right-click a block to set a deathzone."
+    display: "Redstone Blocks and Red Glass"
+
+  markers:
+    name: "Show all markers"
+    cmd: "/castlerush tools markers - Show all markers"
+    info: "Hold to preview all placed markers."
+    display: "Gold Ingot"
+
+  advanced_tool:
+    removed_detail: "%s removed at %s"
+    placed: "placed"
+    placed_detail: "%s placed at %s"
+    blocked_existing: "%s cannot be placed here; already marked as %s."
+    replaced: "Warning: %s block was replaced."
+    replaced_total: "Warning: %d other markers were replaced."
+    replaced_list: "Replaced: %s"
+    start: "Effect zone start at %s (%s)"
+    action_end: "%s START - click for END"
+    removed: "Removed %d %s blocks."
+    total: "Total: %d blocks"
+    end: "%s end at %s (%s)"
+    added: "Added %d %s."
+
+  effect:
+    name: "Effect"
+    cmd: "/castlerush tools effect - Effect zone tool"
+    info: "Right-click to select areas; shift-right-click to choose an effect; left-click to test the selected effect on yourself."
+    display: "colored Wool/Glass per effect"
+    effect_control:
+      level_down: "Level -"
+      level_up: "Level +"
+      level: "Level: %d"
+    messages:
+      gui_title: "Select effect"
+      not_selected: "You have not selected any effect yet!"
+      selected: "Selected effect: %s"
+      applied: "Applied %s (Lv.%d)"
+      cleared: "Cleared %s"
+    effects:
+      speed: "Speed"
+      slowness: "Slowness"
+      blindness: "Blindness"
+      jump_boost: "Jump boost"
+      slow_falling: "Slow falling"
+      water_breathing: "Water Breathing"
+      nausea: "Nausea"
+
+
+command:
+  settings:
+    usage: "Usage: /castlerush settings language <de | en | tr> | pvp <on | off>"
+    language_usage: "Usage: /castlerush settings language <de | en | tr>"
+    language_set: "Language set to %s"
+    invalid_language: "Invalid language. Available: %s"
+    players_only: "Only players can change the language."
+    pvp_usage: "Usage: /castlerush settings pvp <on | off>"
+    pvp_set_on: "PVP will be enabled when the race starts."
+    pvp_set_off: "PVP will stay disabled at race start."
+    pvp_only_before_race: "You can only change PVP before the race starts."
+  time:
+    usage: "Usage: /castlerush time set/add <minutes>"
+    already_running: "The game is already running."
+    set: "Build time set to %d minutes."
+    added: "Build time extended by %d minutes."
+  start:
+    already_running: "A game is already running."
+    not_running: "There was no build phase yet."
+    no_players: "No players online."
+    header: "Castle Rush STARTED!"
+    players: "Players: %d"
+    time: "Build time: %d minutes"
+    race_begin: "Race phase started."
+  end:
+    running: "The race has started already!"
+    finished: "Phase ended."
+  reset: "Game has been reset."
+  info:
+    header: "--- Castle Rush Info ---"
+    status: "Status: %s"
+    time: "Build time: %d minutes"
+    remaining: "Time left: %s:%s"
+  help:
+    header: "--- Castle Rush Commands ---"
+    settings: "/castlerush settings language <de | en | tr> | pvp <on | off> - Change language or toggle race PVP"
+    time_set: "/castlerush time set <minutes> - Set build time"
+    time_add: "/castlerush time add <minutes> - Add time"
+    tools: "/castlerush tools <tool> - Get tool"
+    start: "/castlerush build - Start build phase"
+    end: "/castlerush end - End current phase"
+    reset: "/castlerush reset - Reset game"
+    info: "/castlerush info - Show info"
+
+race:
+  castle_missing: "Error: Castle could not be found."
+  castle_header: "Castle %d/%d: %s"
+  castle_complete: "%s completed %s's Castle in %d min %d sec."
+  back_hint: "(Walk to the end to go back)"
+  checkpoint: "Checkpoint reached."
+  deathzone: "Deathzone! Back to checkpoint."
+  all_finished: "%s finished ALL Castles."
+  total_time: "Total time: %d min %d sec"
+  respawn_checkpoint: "Back to the last checkpoint."
+  spectate_viewer_start: "You are now spectating {0}."
+  spectate_target_start: "{0} is now spectating you."
+  spectate_viewer_stop: "You stopped spectating."
+  spectate_target_stop: "{0} stopped spectating you."
+
+scoreboard:
+  title: "Castle Rush"
+  time_label: "Time:"
+  build_task: "Build your Castle!"
+  players: "Players:"
+  waiting: "Waiting to start..."

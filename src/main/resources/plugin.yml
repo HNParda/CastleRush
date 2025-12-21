@@ -1,0 +1,14 @@
+﻿name: CastleRush
+version: 1.1.0
+main: com.hnp_arda.castlerush.Main
+description: Castle Rush
+author: HNP_Arda
+website: https://vianos-official.com
+api-version: '1.21.10'
+load: POSTWORLD
+
+commands:
+  castlerush:
+    usage: /castlerush <build|start|end|reset|tools|settings|time|info|help>
+    aliases: [ c ]
+
