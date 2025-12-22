@@ -1,12 +1,14 @@
-package com.hnp_arda.castlerush.tools;
+package com.hnp_arda.castlerush.tools.tools;
 
-import com.hnp_arda.castlerush.GameManager;
+import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.PlayerCastle;
+import com.hnp_arda.castlerush.tools.BaseTool;
+import com.hnp_arda.castlerush.tools.MarkerData;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public class MarkerViewerTool extends Tool {
+public class MarkerViewerTool extends BaseTool {
 
     public MarkerViewerTool(GameManager gameManager) {
         super(gameManager);

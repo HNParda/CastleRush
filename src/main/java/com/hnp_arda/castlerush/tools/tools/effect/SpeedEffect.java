@@ -1,42 +1,42 @@
-package com.hnp_arda.castlerush.tools.effect;
+package com.hnp_arda.castlerush.tools.tools.effect;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.potion.PotionEffectType;
 
-public class JumpboostEffect extends Effect {
+public class SpeedEffect extends Effect {
     @Override
     public String getEffectName() {
-        return "jump_boost";
+        return "speed";
     }
 
     @Override
     public Material getStartBlock() {
-        return Material.LIME_CONCRETE;
+        return Material.LIGHT_BLUE_CONCRETE;
     }
 
     @Override
     public Material getSolidBlock() {
-        return Material.LIME_WOOL;
+        return Material.LIGHT_BLUE_WOOL;
     }
 
     @Override
     public Material getAirBlock() {
-        return Material.LIME_STAINED_GLASS;
+        return Material.LIGHT_BLUE_STAINED_GLASS;
     }
 
     @Override
     public Material getIcon() {
-        return Material.RABBIT_FOOT;
+        return Material.SUGAR;
     }
 
     @Override
     public PotionEffectType getPotionType() {
-        return PotionEffectType.JUMP_BOOST;
+        return PotionEffectType.SPEED;
     }
 
     @Override
     public NamedTextColor getColor() {
-        return NamedTextColor.GREEN;
+        return NamedTextColor.AQUA;
     }
 }

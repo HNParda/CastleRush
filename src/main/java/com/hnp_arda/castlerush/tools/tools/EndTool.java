@@ -1,17 +1,19 @@
-package com.hnp_arda.castlerush.tools;
+package com.hnp_arda.castlerush.tools.tools;
 
 import com.hnp_arda.castlerush.PlayerCastle;
-import com.hnp_arda.castlerush.GameManager;
-import com.hnp_arda.castlerush.RaceManager;
+import com.hnp_arda.castlerush.managers.GameManager;
+import com.hnp_arda.castlerush.managers.RaceManager;
+import com.hnp_arda.castlerush.tools.BaseTool;
+import com.hnp_arda.castlerush.tools.MarkerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-import static com.hnp_arda.castlerush.GameManager.languageManager;
+import static com.hnp_arda.castlerush.managers.GameManager.languageManager;
 
-public class EndTool extends Tool {
+public class EndTool extends BaseTool {
 
     public EndTool(GameManager gameManager) {
         super(gameManager);
@@ -30,11 +32,8 @@ public class EndTool extends Tool {
     @Override
     public void handleInteract(PlayerInteractEvent event, PlayerCastle playerCastle) {
         if (event.getClickedBlock() == null) return;
-        event.getPlayer().sendMessage("");
         playerCastle.setEnd(event.getClickedBlock().getLocation());
         placeSimpleMarker(event.getPlayer(), playerCastle, getTypeId(), event.getClickedBlock().getLocation());
-        revealMarkers(event.getPlayer(), playerCastle, getTypeId());
-        event.getPlayer().sendMessage("");
     }
 
     @Override

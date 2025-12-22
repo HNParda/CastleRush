@@ -1,6 +1,7 @@
-package com.hnp_arda.castlerush;
+package com.hnp_arda.castlerush.managers;
 
-import com.hnp_arda.castlerush.GameManager.GameState;
+import com.hnp_arda.castlerush.Main;
+import com.hnp_arda.castlerush.managers.GameManager.GameState;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;

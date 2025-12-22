@@ -1,7 +1,7 @@
-package com.hnp_arda.castlerush;
+package com.hnp_arda.castlerush.managers;
 
-import com.hnp_arda.castlerush.GameManager.GameState;
-import com.hnp_arda.castlerush.tools.Tool;
+import com.hnp_arda.castlerush.managers.GameManager.GameState;
+import com.hnp_arda.castlerush.tools.BaseTool;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import static com.hnp_arda.castlerush.GameManager.languageManager;
+import static com.hnp_arda.castlerush.managers.GameManager.languageManager;
 
 public record CommandManager(GameManager gameManager) implements CommandExecutor, TabCompleter {
 
@@ -118,7 +118,7 @@ public record CommandManager(GameManager gameManager) implements CommandExecutor
             return;
         }
 
-        Tool tool = gameManager.getToolsManager().getTool(args[1]);
+        BaseTool tool = gameManager.getToolsManager().getTool(args[1]);
         if (tool == null) {
             player.sendMessage(Component.text(languageManager.get("tools.unknown"), NamedTextColor.RED));
             return;
@@ -144,13 +144,13 @@ public record CommandManager(GameManager gameManager) implements CommandExecutor
                     return;
                 }
                 gameManager.setBuildTime(seconds);
-                gameManager.getPlugin().updateTimeSing(seconds / 60);
+                gameManager.getPlugin().updateTimeSign(seconds / 60);
                 sender.sendMessage(Component.text(languageManager.get("command.time.set", (seconds / 60)), NamedTextColor.GREEN));
             } else if (args[1].equalsIgnoreCase("add")) {
                 gameManager.addBuildTime(seconds);
                 Bukkit.broadcast(Component.text(languageManager.get("command.time.added", (seconds / 60)), NamedTextColor.GREEN));
                 if (gameManager.getGameState() == GameState.WAITING)
-                    gameManager.getPlugin().updateTimeSing(gameManager.getBuildTimeSeconds() / 60);
+                    gameManager.getPlugin().updateTimeSign(gameManager.getBuildTimeSeconds() / 60);
             } else {
                 sender.sendMessage(Component.text(languageManager.get("command.time.usage"), NamedTextColor.RED));
             }

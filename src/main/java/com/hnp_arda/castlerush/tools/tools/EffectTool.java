@@ -1,9 +1,10 @@
-package com.hnp_arda.castlerush.tools.effect;
+package com.hnp_arda.castlerush.tools.tools;
 
-import com.hnp_arda.castlerush.GameManager;
+import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.PlayerCastle;
-import com.hnp_arda.castlerush.tools.AdvancedTool;
+import com.hnp_arda.castlerush.tools.BaseAdvancedTool;
 import com.hnp_arda.castlerush.tools.MarkerData;
+import com.hnp_arda.castlerush.tools.tools.effect.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -25,9 +26,9 @@ import java.util.*;
 
 import static com.hnp_arda.castlerush.tools.MarkerData.formatLocation;
 
-public class EffectTool extends AdvancedTool implements Listener {
+public class EffectTool extends BaseAdvancedTool implements Listener {
 
-    private final List<Effect> effectTypes = new ArrayList<>(EffectRegistry.all());
+    private final List<Effect> EFFECTS = new ArrayList<>();
     private final Map<UUID, EffectSelection> selections = new HashMap<>();
     private final Map<UUID, EffectTool.ActiveEffect> activeEffects;
 
@@ -35,7 +36,22 @@ public class EffectTool extends AdvancedTool implements Listener {
         super(gameManager);
         gameManager.getPlugin().getServer().getPluginManager().registerEvents(this, gameManager.getPlugin());
         this.activeEffects = new HashMap<>();
+        registerEffects();
+    }
 
+    private void registerEffects() {
+        registerEffect(new SpeedEffect());
+        registerEffect(new JumpboostEffect());
+        registerEffect(new BreathingEffect());
+
+        registerEffect(new NauseaEffect());
+        registerEffect(new SlownessEffect());
+        registerEffect(new BlindnessEffect());
+        registerEffect(new SlowfallingEffect());
+    }
+
+    private void registerEffect(Effect effect) {
+        EFFECTS.add(effect);
     }
 
     @Override
@@ -95,18 +111,13 @@ public class EffectTool extends AdvancedTool implements Listener {
     }
 
     @EventHandler
-    public void onEffectSelect(InventoryClickEvent event) {
-        handleInventoryClick(event);
-    }
-
     public void handleInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (!event.getView().title().equals(guiTitle())) return;
         event.setCancelled(true);
         int slot = event.getRawSlot();
-        getSelectedEffect(player);
-        List<Effect> good = effectTypes.stream().filter(Effect::isGoodEffect).toList();
-        List<Effect> bad = effectTypes.stream().filter(effect -> !effect.isGoodEffect()).toList();
+        List<Effect> good = EFFECTS.stream().filter(Effect::isGoodEffect).toList();
+        List<Effect> bad = EFFECTS.stream().filter(effect -> !effect.isGoodEffect()).toList();
 
         int base = event.getInventory().getSize() - 9;
         if (slot == base + 3) {
@@ -159,20 +170,11 @@ public class EffectTool extends AdvancedTool implements Listener {
         List<Location> regionBlocks = getBlocksBetween(start, end);
 
         RegionToggleResult result = toggleRegionMarkers(player, playerCastle, regionBlocks, getTypeId(), startInZone && endInZone, loc -> {
-            Material original = loc.getBlock().getType();
-            //Material display = selectedEffect.getDisplayMaterial(original == Material.AIR || original.isAir());
             EffectSelection selection = getSelection(player);
             int amplifier = selection != null ? clampLevel(selection.amplifier()) : 1;
             String advancedToolData = String.format("effect;%s;%s", selectedEffect.getEffectName(), amplifier);
-            return new MarkerData(this, loc.clone(), original, getTypeId(), "tools.effect.name", advancedToolData);
-        }/*, (marker) -> {
-
-            EffectSelection selection = getSelection(player);
-            int amplifier = selection != null ? clampLevel(selection.amplifier()) : 1;
-            String advancedToolData = String.format("effect;%s;%s", selectedEffect.getEffectName(), amplifier);
-            marker.setAdvancedToolData(advancedToolData);
-            // marker.setDisplayMaterial(selectedEffect.getDisplayMaterial(original == Material.AIR || original.isAir()));
-        }*/);
+            return new MarkerData(this, loc.clone(), getTypeId(), "tools.effect.name", advancedToolData);
+        });
 
         player.sendMessage(Component.text(""));
         if (result.removedMode()) {
@@ -199,11 +201,10 @@ public class EffectTool extends AdvancedTool implements Listener {
     }
 
     private void openEffectSelector(Player player) {
-        if (effectTypes.isEmpty()) return;
         getSelectedEffect(player);
         Inventory inv = Bukkit.createInventory(player, InventoryType.CHEST, guiTitle());
-        List<Effect> good = effectTypes.stream().filter(Effect::isGoodEffect).toList();
-        List<Effect> bad = effectTypes.stream().filter(effect -> !effect.isGoodEffect()).toList();
+        List<Effect> good = EFFECTS.stream().filter(Effect::isGoodEffect).toList();
+        List<Effect> bad = EFFECTS.stream().filter(effect -> !effect.isGoodEffect()).toList();
 
         List<Integer> goodSlots = computeEffectSlots(good.size(), 0);
         for (int i = 0; i < good.size(); i++) {
@@ -253,12 +254,11 @@ public class EffectTool extends AdvancedTool implements Listener {
     }
 
     private void updateToolNameInHand(Player player) {
-        Effect effect = getSelectedEffect(player);
-        if (effect == null) return;
+        EffectSelection sel = getSelection(player);
+        Effect effect = sel.effect();
+        int level = sel.amplifier();
 
-        EffectSelection selection = selections.get(player.getUniqueId());
         String effectName = getEffectLabel(effect);
-        int level = selection != null ? selection.amplifier() : 1;
         Component name = Component.text(lang().get("tools.effect.name") + " ", NamedTextColor.YELLOW).append(Component.text("(" + effectName + " " + level + ")", effect.getColor()));
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item.getType() != getToolItem()) return;
@@ -270,58 +270,43 @@ public class EffectTool extends AdvancedTool implements Listener {
     }
 
     private Effect getSelectedEffect(Player player) {
-        Effect fallback = EffectRegistry.firstGood();
-        if (fallback == null && !effectTypes.isEmpty()) {
-            fallback = effectTypes.getFirst();
-        }
-        Effect finalFallback = fallback;
-        EffectSelection sel = selections.computeIfAbsent(player.getUniqueId(), id -> new EffectSelection(finalFallback, 1));
+        EffectSelection sel = getSelection(player);
         return sel.effect();
     }
-/*
-    @Override
-    protected Material resolveDisplayMaterial(MarkerData marker) {
-        if (getTypeId().equalsIgnoreCase(marker.getTypeId()) && marker.isAdvancedMarker()) {
-            Effect effect = getEffectByMarkerData(marker);
-            if (effect == null) return null;
-            return effect.getDisplayMaterial(marker.getOriginalMaterial() == Material.AIR || marker.getOriginalMaterial().isAir());
-        } return super.resolveDisplayMaterial(marker);
-    }*/
 
     private Component guiTitle() {
         return Component.text(lang().get("tools.effect.messages.gui_title"));
     }
 
-    private Effect getEffectByMarkerData(MarkerData marker) {
+    private Effect getEffectByMarker(MarkerData marker) {
         if (!marker.isAdvancedMarker()) return null;
         String advancedToolData = marker.getAdvancedToolData();
         String[] data = advancedToolData.split(";");
-        if (data[0].equals("effect") || data.length != 3) return null;
+        return getEffectByMarkerData(data);
+    }
+
+    private Effect getEffectByMarkerData(String[] data) {
+        if (!data[0].equals("effect") || data.length != 3) return null;
         String effectName = data[1];
-        return effectTypes.stream().filter(effect -> effect.getEffectName().equals(effectName)).toList().getFirst();
+        return EFFECTS.stream().filter(effect -> effect.getEffectName().equals(effectName)).toList().getFirst();
     }
 
     private ActiveEffect getActiveEffectByMarkerData(MarkerData marker) {
         if (!marker.isAdvancedMarker()) return null;
         String advancedToolData = marker.getAdvancedToolData();
         String[] data = advancedToolData.split(";");
-        if (data[0].equals("effect") || data.length != 3) return null;
-        Effect effect = effectTypes.stream().filter(e -> e.getEffectName().equals(data[1])).toList().getFirst();
+        Effect effect = getEffectByMarkerData(data);
         return new ActiveEffect(effect, Integer.parseInt(data[2]));
     }
 
     private EffectSelection getSelection(Player player) {
-        return selections.get(player.getUniqueId());
+        return selections.computeIfAbsent(player.getUniqueId(), id -> new EffectSelection(EFFECTS.getFirst(), 1));
     }
 
     private void adjustAmplifier(Player player, int delta) {
-        Effect selected = getSelectedEffect(player);
         EffectSelection sel = getSelection(player);
-        if (sel == null) {
-            sel = new EffectSelection(selected, 1);
-        }
         int next = clampLevel(sel.amplifier() + delta);
-        selections.put(player.getUniqueId(), new EffectSelection(selected, next));
+        selections.put(player.getUniqueId(), new EffectSelection(sel.effect, next));
     }
 
     private void updateControlBar(Inventory inv, Player player) {
@@ -382,10 +367,9 @@ public class EffectTool extends AdvancedTool implements Listener {
 
     @Override
     protected Material getDisplayMaterial(World world, MarkerData marker) {
-        Effect selectedEffect = getEffectByMarkerData(marker);
-        Material original = super.getDisplayMaterial(world, marker);
+        Effect selectedEffect = getEffectByMarker(marker);
         if (selectedEffect == null) return null;
-        return selectedEffect.getDisplayMaterial(original == Material.AIR || original.isAir());
+        return selectedEffect.getDisplayMaterial(marker.isAir());
     }
 
     @Override
@@ -439,7 +423,12 @@ public class EffectTool extends AdvancedTool implements Listener {
         return first.effect().getEffectName().equalsIgnoreCase(second.effect().getEffectName()) && first.level() == second.level();
     }
 
-    private record ActiveEffect(com.hnp_arda.castlerush.tools.effect.Effect effect, int level) {
+    @Override
+    public boolean canLeftClick() {
+        return true;
+    }
+
+    private record ActiveEffect(com.hnp_arda.castlerush.tools.tools.effect.Effect effect, int level) {
     }
 
     private record EffectSelection(Effect effect, int amplifier) {

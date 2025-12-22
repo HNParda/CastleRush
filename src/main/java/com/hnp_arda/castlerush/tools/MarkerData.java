@@ -10,21 +10,24 @@ public class MarkerData {
     private final Location location;
     private final String typeId;
     private final String translationKey;
+    private final BaseTool tool;
     private Material originalMaterial;
-    private final Tool tool;
     private String advancedToolData;
 
-    public MarkerData(Tool tool, Location location, Material originalMaterial, String typeId, String translationKey) {
+    public MarkerData(BaseTool tool, Location location, String typeId, String translationKey) {
         this.location = location;
-        this.originalMaterial = originalMaterial;
         this.typeId = typeId;
         this.translationKey = translationKey;
         this.tool = tool;
+
+        World world = location.getWorld();
+        Material originalMaterial = world.getBlockAt(getLocation()).getType();
+        setOriginalMaterial(originalMaterial);
+
     }
 
-    //WIRD NOCH GEÄNDERT HARDCODED FSKadDKS
-    public MarkerData(Tool tool, Location location, Material originalMaterial, String typeId, String translationKey, String advancedToolData) {
-        this(tool, location, originalMaterial, typeId, translationKey);
+    public MarkerData(BaseTool tool, Location location, String typeId, String translationKey, String advancedToolData) {
+        this(tool, location, typeId, translationKey);
         this.advancedToolData = advancedToolData;
     }
 
@@ -53,7 +56,7 @@ public class MarkerData {
     }
 
     public Material getDisplayMaterial() {
-        World world =  location.getWorld();
+        World world = location.getWorld();
         Material originalMaterial = world.getBlockAt(getLocation()).getType();
         setOriginalMaterial(originalMaterial);
         return tool.getDisplayMaterial(world, this);
@@ -63,8 +66,10 @@ public class MarkerData {
         return advancedToolData;
     }
 
-    public void setAdvancedToolData(String advancedToolData) {
-        this.advancedToolData = advancedToolData;
+    public boolean isAir() {
+        World world = location.getWorld();
+        Material m = world.getBlockAt(getLocation()).getType();
+        return m.isAir() || m == Material.AIR;
     }
 
     public void triggerMarkerEnter(Player player) {

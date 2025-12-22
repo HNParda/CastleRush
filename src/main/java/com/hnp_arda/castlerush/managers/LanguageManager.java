@@ -1,4 +1,4 @@
-package com.hnp_arda.castlerush;
+package com.hnp_arda.castlerush.managers;
 
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -26,8 +26,11 @@ public class LanguageManager {
     private void loadLanguages() {
         File languageDir = new File(plugin.getDataFolder(), "languages");
         if (!languageDir.exists()) {
-            languageDir.mkdirs();
+            boolean success = languageDir.mkdir();
+            if (!success)
+                plugin.getLogger().severe("Could not create language directory! Messages will not work properly.");
         }
+
 
         for (String code : List.of("de", "en", "tr")) {
             String resourcePath = "languages/" + code + ".yml";
@@ -47,9 +50,6 @@ public class LanguageManager {
                 throw new RuntimeException(e);
             }
 
-
-            //YamlConfiguration config = YamlConfiguration.loadConfiguration(targetFile);
-            //  languages.put(code, config);
         }
     }
 

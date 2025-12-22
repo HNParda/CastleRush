@@ -1,42 +1,47 @@
-package com.hnp_arda.castlerush.tools.effect;
+package com.hnp_arda.castlerush.tools.tools.effect;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.potion.PotionEffectType;
 
-public class SpeedEffect extends Effect {
+public class SlowfallingEffect extends Effect {
     @Override
     public String getEffectName() {
-        return "speed";
+        return "slow_falling";
     }
 
     @Override
     public Material getStartBlock() {
-        return Material.LIGHT_BLUE_CONCRETE;
+        return Material.WHITE_CONCRETE;
     }
 
     @Override
     public Material getSolidBlock() {
-        return Material.LIGHT_BLUE_WOOL;
+        return Material.WHITE_WOOL;
     }
 
     @Override
     public Material getAirBlock() {
-        return Material.LIGHT_BLUE_STAINED_GLASS;
+        return Material.WHITE_STAINED_GLASS;
     }
 
     @Override
     public Material getIcon() {
-        return Material.SUGAR;
+        return Material.FEATHER;
     }
 
     @Override
     public PotionEffectType getPotionType() {
-        return PotionEffectType.SPEED;
+        return PotionEffectType.SLOW_FALLING;
+    }
+
+    @Override
+    public boolean isGoodEffect() {
+        return false;
     }
 
     @Override
     public NamedTextColor getColor() {
-        return NamedTextColor.AQUA;
+        return NamedTextColor.WHITE;
     }
 }

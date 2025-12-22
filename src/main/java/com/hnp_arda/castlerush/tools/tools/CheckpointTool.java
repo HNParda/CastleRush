@@ -1,13 +1,16 @@
-package com.hnp_arda.castlerush.tools;
+package com.hnp_arda.castlerush.tools.tools;
 
+import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.PlayerCastle;
-import com.hnp_arda.castlerush.GameManager;
+import com.hnp_arda.castlerush.tools.BaseTool;
+import com.hnp_arda.castlerush.tools.MarkerData;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public class CheckpointTool extends Tool {
+public class CheckpointTool extends BaseTool {
 
 
     public CheckpointTool(GameManager gameManager) {
@@ -27,10 +30,7 @@ public class CheckpointTool extends Tool {
     @Override
     public void handleInteract(PlayerInteractEvent event, PlayerCastle playerCastle) {
         if (event.getClickedBlock() == null) return;
-        event.getPlayer().sendMessage("");
         placeSimpleMarker(event.getPlayer(), playerCastle, getTypeId(), event.getClickedBlock().getLocation());
-        revealMarkers(event.getPlayer(), playerCastle, getTypeId());
-        event.getPlayer().sendMessage("");
     }
 
     @Override
@@ -50,7 +50,8 @@ public class CheckpointTool extends Tool {
 
     @Override
     public void triggerEnter(Player player, MarkerData marker) {
-        gameManager.getRaceManager().setCheckpoint(player, marker.getLocation());
+        if (player.getGameMode() == GameMode.SURVIVAL)
+            gameManager.getRaceManager().setCheckpoint(player, marker.getLocation());
     }
 
     @Override

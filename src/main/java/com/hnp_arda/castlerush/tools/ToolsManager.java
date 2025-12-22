@@ -1,9 +1,9 @@
 package com.hnp_arda.castlerush.tools;
 
-import com.hnp_arda.castlerush.GameManager;
-import com.hnp_arda.castlerush.GameManager.GameState;
+import com.hnp_arda.castlerush.managers.GameManager;
+import com.hnp_arda.castlerush.managers.GameManager.GameState;
 import com.hnp_arda.castlerush.PlayerCastle;
-import com.hnp_arda.castlerush.tools.effect.EffectTool;
+import com.hnp_arda.castlerush.tools.tools.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -20,7 +20,7 @@ import java.util.List;
 public class ToolsManager implements Listener {
 
     private final GameManager gameManager;
-    private final ArrayList<Tool> tools = new ArrayList<>();
+    private final ArrayList<BaseTool> TOOLS = new ArrayList<>();
 
     public ToolsManager(GameManager gameManager) {
         this.gameManager = gameManager;
@@ -29,36 +29,36 @@ public class ToolsManager implements Listener {
     }
 
     private void registerTools() {
-        addTool(new StartTool(gameManager));
-        addTool(new EndTool(gameManager));
-        addTool(new CheckpointTool(gameManager));
-        addTool(new DeathzoneTool(gameManager));
-        addTool(new EffectTool(gameManager));
-        addTool(new MarkerViewerTool(gameManager));
+        registerTool(new StartTool(gameManager));
+        registerTool(new EndTool(gameManager));
+        registerTool(new CheckpointTool(gameManager));
+        registerTool(new DeathzoneTool(gameManager));
+        registerTool(new EffectTool(gameManager));
+        registerTool(new MarkerViewerTool(gameManager));
     }
 
-    private void addTool(Tool tool) {
-        tools.add(tool);
+    private void registerTool(BaseTool tool) {
+        TOOLS.add(tool);
     }
 
-    public Tool getTool(ItemStack item) {
+    public BaseTool getTool(ItemStack item) {
         if (item == null) return null;
-        List<Tool> t = tools.stream().filter(tool -> tool.getToolItem().equals(item.getType())).toList();
+        List<BaseTool> t = TOOLS.stream().filter(tool -> tool.getToolItem().equals(item.getType())).toList();
         if (t.isEmpty()) return null;
         return t.getFirst();
     }
 
-    public Tool getTool(String toolName) {
+    public BaseTool getTool(String toolName) {
         if (toolName == null || toolName.isEmpty()) return null;
         try {
-            return tools.stream().filter(t -> t.getName().equalsIgnoreCase(toolName)).toList().getFirst();
+            return TOOLS.stream().filter(t -> t.getName().equalsIgnoreCase(toolName)).toList().getFirst();
         } catch (Exception e) {
             return null;
         }
     }
 
-    public ArrayList<Tool> getTools() {
-        return tools;
+    public ArrayList<BaseTool> getTools() {
+        return TOOLS;
     }
 
     @EventHandler
@@ -66,12 +66,12 @@ public class ToolsManager implements Listener {
         if (gameManager.getGameState() != GameState.BUILDING) return;
         if (event.getHand() != EquipmentSlot.HAND) return;
 
-        Tool tool = getTool(event.getItem());
+        BaseTool tool = getTool(event.getItem());
         if (tool == null || event.getItem() == null || !event.getItem().hasItemMeta()) return;
         boolean rightClick = event.getAction() == Action.RIGHT_CLICK_BLOCK || event.getAction() == Action.RIGHT_CLICK_AIR;
         boolean leftClick = event.getAction() == Action.LEFT_CLICK_BLOCK || event.getAction() == Action.LEFT_CLICK_AIR;
-        if (!rightClick && !(tool instanceof EffectTool && leftClick)) return;
-//WIRD NOCH UMGEBAUT DAMIT ES NICHT HARDCOCDED IST
+        if (!rightClick && !(leftClick && tool.canLeftClick() )) return;
+
         Player player = event.getPlayer();
         PlayerCastle playerCastle = gameManager.getPlayerCastle(player);
         if (playerCastle == null) return;
@@ -88,7 +88,7 @@ public class ToolsManager implements Listener {
         PlayerInventory inv = player.getInventory();
 
         ItemStack prevItem = inv.getItem(event.getPreviousSlot());
-        Tool prevTool = getTool(prevItem);
+        BaseTool prevTool = getTool(prevItem);
         if (prevTool != null) {
             PlayerCastle playerCastle = gameManager.getPlayerCastle(player);
             if (playerCastle != null) {
@@ -97,7 +97,7 @@ public class ToolsManager implements Listener {
         }
 
         ItemStack newItem = inv.getItem(event.getNewSlot());
-        Tool newTool = getTool(newItem);
+        BaseTool newTool = getTool(newItem);
         if (newTool != null) {
             assert newItem != null;
             if (newItem.hasItemMeta()) {

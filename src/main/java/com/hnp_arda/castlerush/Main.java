@@ -1,6 +1,8 @@
 package com.hnp_arda.castlerush;
 
-import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
+import com.hnp_arda.castlerush.listeners.SpawnListener;
+import com.hnp_arda.castlerush.managers.CommandManager;
+import com.hnp_arda.castlerush.managers.GameManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
@@ -8,13 +10,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.data.type.Switch;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityPlaceEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.block.sign.SignSide;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -22,7 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
-public class Main extends JavaPlugin implements Listener {
+public class Main extends JavaPlugin {
 
     public Sign timeSign;
     public Location subTimeBtnLoc;
@@ -31,34 +27,37 @@ public class Main extends JavaPlugin implements Listener {
     public Location raceBtnLoc;
     public Location resetBtnLoc;
 
-    private GameManager gameManager;
-    private World spawnIsland;
+    public GameManager gameManager;
+    public World spawnIsland;
 
     @Override
     public void onEnable() {
-        getLogger().info("CaslteRush Plugin wurde geladen!");
+        getLogger().info("CaslteRush Plugin loaded!");
 
-        gameManager = new GameManager(this);
-
-        getServer().getPluginManager().registerEvents(this, this);
+        createSpawnWorld();
 
         Objects.requireNonNull(getCommand("castlerush")).setExecutor(new CommandManager(gameManager));
 
-        createHubWorld();
+        gameManager = new GameManager(this);
 
-        getLogger().info("CaslteRush Plugin wurde erfolgreich gestartet!");
+        SpawnListener spawnListener = new SpawnListener(this, gameManager, spawnIsland);
+        getServer().getPluginManager().registerEvents(spawnListener, this);
+
+        setupTimeControls();
+        setupGameControls();
+
+        getLogger().info("CaslteRush Plugin successfully enabled!");
     }
 
-    private void createHubWorld() {
+    private void createSpawnWorld() {
         WorldCreator wc = new WorldCreator("castle_rush_spawn");
 
         File worldFolder = new File(getServer().getWorldContainer(), "castle_rush_spawn");
         if (worldFolder.exists()) {
             spawnIsland = wc.createWorld();
-            getLogger().info("CaslteRush Island gefunden und geladen.");
-            setupTimeControls();
+            getLogger().info("CaslteRush Island found and loaded.");
         } else {
-            getLogger().info("CaslteRush Island nicht gefunden. Wird erstellt");
+            getLogger().info("CastleRush Island not found. Creating...");
 
             wc.generator(new SpawnGenerator());
             wc.environment(World.Environment.NORMAL);
@@ -67,7 +66,7 @@ public class Main extends JavaPlugin implements Listener {
             spawnIsland = wc.createWorld();
 
             if (spawnIsland == null) {
-                getLogger().severe("Welt konnte nicht erstellt werden!");
+                getLogger().severe("Couldnt create new Spawn Island World!");
                 return;
             }
 
@@ -82,31 +81,9 @@ public class Main extends JavaPlugin implements Listener {
             spawnIsland.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
             spawnIsland.setSpawnLocation(8, 80, 8, -45F);
 
-            getLogger().info("CaslteRush Plugin wurde gestartet!");
+            getLogger().info("CaslteRush Island created!");
         }
 
-        setupTimeControls();
-        setupGameControls();
-    }
-
-    private void updateTime(int minutes) {
-        int newTimeSeconds = Math.max(300, gameManager.getBuildTimeSeconds() + 60 * minutes);
-        gameManager.updateBuildTime(newTimeSeconds);
-        updateTimeSing(newTimeSeconds / 60);
-    }
-
-    public void updateTimeSing(int minutes) {
-
-        Bukkit.getScheduler().runTask(gameManager.getPlugin(), () -> {
-            var side = timeSign.getSide(Side.FRONT);
-
-            side.line(0, Component.empty());
-            side.line(1, Component.text("Build Time"));
-            side.line(2, Component.text(minutes + " Min"));
-            side.line(3, Component.empty());
-
-            timeSign.update(true, false);
-        });
     }
 
     private Sign createSign(String message, int x, int y, int z, BlockFace facing) {
@@ -151,6 +128,44 @@ public class Main extends JavaPlugin implements Listener {
         spawnIsland.setBlockData(addTimeBtnLoc, addTimeBtn);
     }
 
+    public void updateTime(int minutes) {
+        int newTimeSeconds = Math.max(600, gameManager.getBuildTimeSeconds() + 60 * minutes);
+        gameManager.updateBuildTime(newTimeSeconds);
+        updateTimeSign(newTimeSeconds / 60);
+    }
+
+    public void handleBtn(Location loc) {
+        if (loc.equals(subTimeBtnLoc))
+            updateTime(-5);
+
+        else if (loc.equals(addTimeBtnLoc))
+            updateTime(+5);
+
+        else if (loc.equals(buildBtnLoc))
+            gameManager.startBuild();
+
+        else if (loc.equals(raceBtnLoc))
+            gameManager.startRace();
+
+        else if (loc.equals(resetBtnLoc))
+            gameManager.resetGame();
+
+    }
+
+    public void updateTimeSign(int minutes) {
+
+        Bukkit.getScheduler().runTask(gameManager.getPlugin(), () -> {
+            SignSide side = timeSign.getSide(Side.FRONT);
+
+            side.line(0, Component.empty());
+            side.line(1, Component.text("Build Time"));
+            side.line(2, Component.text(minutes + " Min"));
+            side.line(3, Component.empty());
+
+            timeSign.update(true, false);
+        });
+    }
+
     private void setupGameControls() {
         if (spawnIsland == null) return;
 
@@ -178,147 +193,6 @@ public class Main extends JavaPlugin implements Listener {
         spawnIsland.setBlockData(resetBtnLoc, resetBtn);
     }
 
-    @EventHandler
-    public void onTimeButtonClick(PlayerInteractEvent event) {
-        if (spawnIsland == null) return;
-        if (event.getClickedBlock() == null) return;
-        if (!event.getClickedBlock().getWorld().equals(spawnIsland)) return;
-        if (gameManager.getGameState() != GameManager.GameState.WAITING) return;
-        if (event.getAction().isLeftClick()) return;
-
-        Material type = event.getClickedBlock().getType();
-        if (type == Material.PALE_OAK_WALL_SIGN) event.setCancelled(true);
-        if (type != Material.PALE_OAK_BUTTON) return;
-
-        Location loc = event.getClickedBlock().getLocation();
-
-        if (loc.equals(subTimeBtnLoc))
-            updateTime(-5);
-
-        else if (loc.equals(addTimeBtnLoc))
-            updateTime(+5);
-
-        else if (loc.equals(buildBtnLoc))
-            gameManager.startBuild();
-
-        else if (loc.equals(raceBtnLoc))
-            gameManager.startRace();
-
-        else if (loc.equals(resetBtnLoc))
-            gameManager.resetGame();
-        else return;
-
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onBreakBlock(BlockBreakEvent event) {
-        if (spawnIsland == null) return;
-        if (!event.getBlock().getWorld().equals(spawnIsland)) return;
-        if (gameManager.getGameState() != GameManager.GameState.WAITING) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onPlaceBlock(BlockPlaceEvent event) {
-        if (spawnIsland == null) return;
-        if (!event.getBlock().getWorld().equals(spawnIsland)) return;
-        if (gameManager.getGameState() != GameManager.GameState.WAITING) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onPlaceEntity(EntityPlaceEvent event) {
-        if (spawnIsland == null) return;
-        if (!event.getBlock().getWorld().equals(spawnIsland)) return;
-        if (gameManager.getGameState() != GameManager.GameState.WAITING) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onBucketEmpty(PlayerBucketEmptyEvent event) {
-        if (spawnIsland == null) return;
-        if (!event.getBlock().getWorld().equals(spawnIsland)) return;
-        if (gameManager.getGameState() != GameManager.GameState.WAITING) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onBucketFill(PlayerBucketFillEvent event) {
-        if (spawnIsland == null) return;
-        if (!event.getBlock().getWorld().equals(spawnIsland)) return;
-        if (gameManager.getGameState() != GameManager.GameState.WAITING) return;
-        event.setCancelled(true);
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        if (spawnIsland != null) {
-            Player player = event.getPlayer();
-            player.setAllowFlight(true);
-            player.setGameMode(GameMode.SURVIVAL);
-            player.getInventory().clear();
-            player.setExp(0);
-            player.setLevel(0);
-            getLogger().info("CaslteRush JOINED " + player.getName());
-            player.teleport(spawnIsland.getSpawnLocation().add(.5, 0, .5));
-            player.setRespawnLocation(spawnIsland.getSpawnLocation().add(.5, 0, .5));
-        }
-    }
-
-    @EventHandler
-    public void onRespawn(PlayerRespawnEvent event) {
-        if (spawnIsland == null) return;
-        if (event.getPlayer().getLocation().getWorld() != spawnIsland) return;
-        event.getPlayer().setAllowFlight(true);
-        event.setRespawnLocation(spawnIsland.getSpawnLocation().add(.5, 0, .5));
-    }
-
-    @EventHandler
-    public void onPostRespawn(PlayerPostRespawnEvent event) {
-        if (spawnIsland == null) return;
-        if (event.getPlayer().getLocation().getWorld() != spawnIsland) return;
-        event.getPlayer().setAllowFlight(true);
-    }
-
-    @EventHandler
-    public void onPlayerPortal(PlayerPortalEvent event) {
-        Location from = event.getFrom();
-        Location to = event.getTo();
-
-        String fromWorldName = from.getWorld().getName();
-        if (!fromWorldName.startsWith("castle_rush_")) return;
-
-        if (fromWorldName.contains("nether")) {
-
-            String worldName = fromWorldName.replace("_nether", "");
-            World world = Bukkit.getWorld(worldName);
-
-            event.setCreationRadius(0);
-            event.setSearchRadius(16);
-
-            Location targetLoc = new Location(world, to.getX(), to.getY(), to.getZ());
-
-            assert world != null;
-            int highestY = world.getHighestBlockYAt(targetLoc);
-
-            event.setTo(targetLoc);
-
-            if (targetLoc.getBlockY() < highestY - 5) {
-                Location surfaceLoc = new Location(world, to.getX(), highestY + 1, to.getZ());
-                event.setTo(surfaceLoc);
-                getLogger().info("Portal korrigiert von Y:" + to.getBlockY() + " zu Y:" + (highestY + 1));
-            }
-
-        } else {
-            String netherName = fromWorldName.replace("castle_rush_", "castle_rush_nether_");
-            World nether = Bukkit.getWorld(netherName);
-            event.setCreationRadius(0);
-            event.setSearchRadius(1);
-            event.setTo(new Location(nether, to.getX(), to.getY(), to.getZ()));
-        }
-    }
-
     @Override
     public void onDisable() {
         if (gameManager != null) {
@@ -330,7 +204,7 @@ public class Main extends JavaPlugin implements Listener {
             } catch (IOException ignored) {
             }
         }
-        getLogger().info("CaslteRush Plugin wurde deaktiviert! ");
+        getLogger().info("CaslteRush Plugin deactivated! ");
     }
 
 }

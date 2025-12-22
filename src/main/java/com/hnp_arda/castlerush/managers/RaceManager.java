@@ -1,9 +1,13 @@
-package com.hnp_arda.castlerush;
+package com.hnp_arda.castlerush.managers;
 
+import com.hnp_arda.castlerush.PlayerCastle;
+import com.hnp_arda.castlerush.RaceListener;
 import com.hnp_arda.castlerush.tools.MarkerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
@@ -13,7 +17,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
-import static com.hnp_arda.castlerush.GameManager.languageManager;
+import static com.hnp_arda.castlerush.managers.GameManager.languageManager;
 
 public class RaceManager {
 
@@ -22,7 +26,7 @@ public class RaceManager {
     private final Map<UUID, ArmorStand> spectatorHeads;
     public List<UUID> teleporting;
     private BukkitRunnable spectatorHeadTask;
-    private List<PlayerCastle> castles;
+    private final List<PlayerCastle> castles;
     private long raceStartTime;
 
     public RaceManager(GameManager gameManager) {
@@ -39,7 +43,6 @@ public class RaceManager {
         playerProgress.clear();
         castles.clear();
         raceStartTime = System.currentTimeMillis();
-        // activeEffects.clear();
         cleanupSpectatorHeads();
 
         for (UUID uuid : participants) {
@@ -115,17 +118,15 @@ public class RaceManager {
 
         List<MarkerData> oldLocMarkers = playerCastle.getMarkers().stream().filter(marker -> {
             Location loc = marker.getLocation();
-            boolean isAir = marker.getOriginalMaterial().isAir() || marker.getOriginalMaterial() == Material.AIR;
-            boolean y =  oldLocation.getBlockY() == loc.getBlockY();
-            y = isAir ? y : y || oldLocation.getBlockY() == loc.getBlockY() + 1;
+            boolean y = oldLocation.getBlockY() == loc.getBlockY();
+            y = marker.isAir() ? y : y || oldLocation.getBlockY() == loc.getBlockY() + 1;
             return oldLocation.getBlockX() == loc.getBlockX() && oldLocation.getBlockZ() == loc.getBlockZ() && y;
         }).toList();
 
         List<MarkerData> newLocMarkers = playerCastle.getMarkers().stream().filter(marker -> {
             Location loc = marker.getLocation();
-            boolean isAir = marker.getOriginalMaterial().isAir() || marker.getOriginalMaterial() == Material.AIR;
-            boolean y =  newLocation.getBlockY() == loc.getBlockY();
-            y = isAir ? y : y || newLocation.getBlockY() == loc.getBlockY() + 1;
+            boolean y = newLocation.getBlockY() == loc.getBlockY();
+            y = marker.isAir() ? y : y || newLocation.getBlockY() == loc.getBlockY() + 1;
             return newLocation.getBlockX() == loc.getBlockX() && newLocation.getBlockZ() == loc.getBlockZ() && y;
         }).toList();
 
@@ -134,10 +135,10 @@ public class RaceManager {
         if (newLocMarkers.isEmpty()) {
             MarkerData oldMarker = oldLocMarkers.getFirst();
             oldMarker.triggerMarkerExit(player);
+        } else {
+            MarkerData newMarker = newLocMarkers.getFirst();
+            newMarker.triggerMarkerEnter(player);
         }
-
-        MarkerData newMarker = oldLocMarkers.getFirst();
-        newMarker.triggerMarkerEnter(player);
 
 
     }
@@ -157,10 +158,7 @@ public class RaceManager {
 
 
     public void handlePlayerDeath(Player player) {
-       /* ActiveEffect currentEffect = activeEffects.remove(player.getUniqueId());
-        if (currentEffect != null) {
-            clearEffect(player, currentEffect);
-        }*/
+
         RaceProgress progress = playerProgress.get(player.getUniqueId());
         PlayerCastle playerCastle = castles.get(progress.getCurrentCastle());
 
@@ -198,11 +196,7 @@ public class RaceManager {
         Bukkit.broadcast(Component.text(languageManager.get("race.all_finished", player.getName()), NamedTextColor.GREEN));
         Bukkit.broadcast(Component.text(languageManager.get("race.total_time", minutes, seconds), NamedTextColor.YELLOW));
         Bukkit.broadcast(Component.text(separator, NamedTextColor.GOLD));
-/*
-        ActiveEffect current = activeEffects.remove(player.getUniqueId());
-        if (current != null) {
-            clearEffect(player, current);
-        }*/
+
         player.getInventory().clear();
         player.setGameMode(GameMode.SPECTATOR);
         progress.setFinished(true);
@@ -292,17 +286,10 @@ public class RaceManager {
     }
 
     public void cleanup() {
-      /*  for (Map.Entry<UUID, ActiveEffect> entry : activeEffects.entrySet()) {
-            Player p = Bukkit.getPlayer(entry.getKey());
-            if (p != null) {
-                clearEffect(p, entry.getValue());
-            }
-        }
-        activeEffects.clear();*/
         playerProgress.clear();
-        if (castles != null) {
+        if (castles != null)
             castles.clear();
-        }
+
         cleanupSpectatorHeads();
         if (spectatorHeadTask != null) {
             spectatorHeadTask.cancel();

@@ -1,7 +1,7 @@
 package com.hnp_arda.castlerush.tools;
 
-import com.hnp_arda.castlerush.GameManager;
-import com.hnp_arda.castlerush.LanguageManager;
+import com.hnp_arda.castlerush.managers.GameManager;
+import com.hnp_arda.castlerush.managers.LanguageManager;
 import com.hnp_arda.castlerush.PlayerCastle;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,13 +17,13 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.List;
 
-import static com.hnp_arda.castlerush.GameManager.languageManager;
+import static com.hnp_arda.castlerush.managers.GameManager.languageManager;
 
-public abstract class Tool {
+public abstract class BaseTool {
 
     protected final GameManager gameManager;
 
-    protected Tool(GameManager gameManager) {
+    protected BaseTool(GameManager gameManager) {
         this.gameManager = gameManager;
     }
 
@@ -74,8 +74,10 @@ public abstract class Tool {
     protected void hideAllMarkers(Player player, PlayerCastle playerCastle) {
         playerCastle.getMarkers().stream().map(MarkerData::getTypeId).distinct().forEach(type -> hideMarkers(player, playerCastle, type));
     }
-
+// ANDERN!!!!!!!!! aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
     protected void placeSimpleMarker(Player player, PlayerCastle playerCastle, String typeId, Location location) {
+
+        player.sendMessage("");
         String translationKey = "tools." + typeId.toLowerCase() + ".name";
         MarkerData existingAtLocation = playerCastle.getLocation(location);
         if (existingAtLocation != null && existingAtLocation.isAdvancedMarker()) {
@@ -90,8 +92,8 @@ public abstract class Tool {
                 sendMarker(player, oldMarker.getFirst().getLocation(), oldMarker.getFirst().getOriginalMaterial().createBlockData());
                 playerCastle.removeMarker(oldMarker.getFirst());
             }
-            //WIRD NOCH GEÄNDERT DAMIT ES NCIHTH HARDCODED IST
-        } else if (typeId.equalsIgnoreCase("mcheckpoint")) {
+            //WIRD NOCH GEÄNDERT DAMIT ES NCIHTH HARDCODED IST !!!!!!!!!!!!!!!!
+        } else if (typeId.equalsIgnoreCase("checkpoint")) {
             MarkerData m = playerCastle.getLocation(location);
             if (m != null) {
                 sendMarker(player, m.getLocation(), m.getOriginalMaterial().createBlockData());
@@ -103,13 +105,16 @@ public abstract class Tool {
             }
         }
 
-        Material originalMaterial = location.getBlock().getType();
-        MarkerData marker = new MarkerData(this, location.clone(), originalMaterial, typeId, translationKey);
+        MarkerData marker = new MarkerData(this, location.clone(), typeId, translationKey);
         playerCastle.addMarker(marker);
 
         String displayName = lang().get(translationKey);
         player.sendActionBar(Component.text(displayName + " " + lang().get("tools.advanced_tool.placed"), NamedTextColor.GOLD));
         player.sendMessage(Component.text(lang().get("tools.advanced_tool.placed_detail", displayName, MarkerData.formatLocation(marker.getLocation())), NamedTextColor.GREEN));
+
+        player.sendMessage("");
+        revealMarkers(player, playerCastle, getTypeId());
+
     }
 
     public String getName() {
@@ -157,11 +162,9 @@ public abstract class Tool {
     public abstract void triggerEnter(Player player, MarkerData marker);
 
     public abstract void triggerExit(Player player);
-/*
-    protected Material resolveDisplayMaterial(MarkerData marker) {
-        if (marker.getDisplayMaterial() != null) {
-            return marker.getDisplayMaterial();
-        }
-        return marker.getOriginalMaterial();
-    }*/
+
+    public boolean canLeftClick() {
+        return false;
+    }
+
 }

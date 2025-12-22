@@ -1,5 +1,7 @@
-package com.hnp_arda.castlerush;
+package com.hnp_arda.castlerush.managers;
 
+import com.hnp_arda.castlerush.Main;
+import com.hnp_arda.castlerush.PlayerCastle;
 import com.hnp_arda.castlerush.tools.ToolsManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -77,7 +79,7 @@ public class GameManager {
     }
 
     public void startBuild() {
-
+//IMPLEMENT LoaDING PREVIOUS MARKERS  (werden bei server stop nicht gespeichert)
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 
         if (players.isEmpty()) {
@@ -177,6 +179,8 @@ public class GameManager {
     }
 
     public void startRace() {
+
+        //IMPLEMENT CHECK IF PLAYERS ARE SAME AND CASTLE WORLDS EXYISTING
         if (buildTimer != null) buildTimer.cancel();
         if (scoreboardManager != null) scoreboardManager.stopAutoUpdate();
 

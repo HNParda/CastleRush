@@ -1,4 +1,4 @@
-package com.hnp_arda.castlerush.tools.effect;
+package com.hnp_arda.castlerush.tools.tools.effect;
 
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;

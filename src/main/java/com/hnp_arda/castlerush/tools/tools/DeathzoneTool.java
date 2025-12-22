@@ -1,10 +1,12 @@
-package com.hnp_arda.castlerush.tools;
+package com.hnp_arda.castlerush.tools.tools;
 
-import com.hnp_arda.castlerush.GameManager;
+import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.PlayerCastle;
-import com.hnp_arda.castlerush.RaceManager;
+import com.hnp_arda.castlerush.tools.BaseAdvancedTool;
+import com.hnp_arda.castlerush.tools.MarkerData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -15,7 +17,7 @@ import java.util.List;
 
 import static com.hnp_arda.castlerush.tools.MarkerData.formatLocation;
 
-public class DeathzoneTool extends AdvancedTool {
+public class DeathzoneTool extends BaseAdvancedTool {
 
     public DeathzoneTool(GameManager gameManager) {
         super(gameManager);
@@ -61,13 +63,7 @@ public class DeathzoneTool extends AdvancedTool {
                 regionBlocks,
                 getTypeId(),
                 startInZone && endInZone,
-                loc -> {
-                    Material original = loc.getBlock().getType();
-                   // Material display = getDisplayMaterial(original);
-                   // return new MarkerData(loc.clone(), original, getTypeId(), "tools.deathzone.name", display, "deathzone");
-                    return new MarkerData(this, loc.clone(), original, getTypeId(), "tools.deathzone.name", "deathzone");
-                }
-                //,  (marker, original) -> marker.setDisplayMaterial(getDisplayMaterial(original))
+                loc -> new MarkerData(this, loc.clone(), getTypeId(), "tools.deathzone.name", "deathzone")
         );
 
         player.sendMessage(Component.text(""));
@@ -118,26 +114,17 @@ public class DeathzoneTool extends AdvancedTool {
 
     @Override
     protected Material getDisplayMaterial(World world, MarkerData marker) {
-        Material original = super.getDisplayMaterial(world, marker);
-        return (original == Material.AIR || original.isAir()) ? Material.RED_STAINED_GLASS : Material.REDSTONE_BLOCK;
+        return marker.isAir() ? Material.RED_STAINED_GLASS : Material.REDSTONE_BLOCK;
     }
 
     @Override
     public void triggerEnter(Player player, MarkerData marker) {
-
-        gameManager.getRaceManager().handlePlayerDeath(player);
+        if (player.getGameMode() == GameMode.SURVIVAL)
+            gameManager.getRaceManager().handlePlayerDeath(player);
     }
 
     @Override
     public void triggerExit(Player player) {
 
     }
-/*
-    @Override
-    protected Material resolveDisplayMaterial(MarkerData marker) {
-        if (getTypeId().equalsIgnoreCase(marker.getTypeId())) {
-            return getDisplayMaterial(marker.getOriginalMaterial());
-        }
-        return super.resolveDisplayMaterial(marker);
-    }*/
 }
