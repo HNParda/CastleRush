@@ -2,10 +2,12 @@ package com.hnp_arda.castlerush.tools;
 
 import com.hnp_arda.castlerush.GameManager;
 import com.hnp_arda.castlerush.PlayerCastle;
+import com.hnp_arda.castlerush.RaceManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 
@@ -61,10 +63,11 @@ public class DeathzoneTool extends AdvancedTool {
                 startInZone && endInZone,
                 loc -> {
                     Material original = loc.getBlock().getType();
-                    Material display = getDisplayMaterial(original);
-                    return new MarkerData(loc.clone(), original, getTypeId(), "tools.deathzone.name", display);
-                },
-                (marker, original) -> marker.setDisplayMaterial(getDisplayMaterial(original))
+                   // Material display = getDisplayMaterial(original);
+                   // return new MarkerData(loc.clone(), original, getTypeId(), "tools.deathzone.name", display, "deathzone");
+                    return new MarkerData(this, loc.clone(), original, getTypeId(), "tools.deathzone.name", "deathzone");
+                }
+                //,  (marker, original) -> marker.setDisplayMaterial(getDisplayMaterial(original))
         );
 
         player.sendMessage(Component.text(""));
@@ -114,15 +117,27 @@ public class DeathzoneTool extends AdvancedTool {
     }
 
     @Override
-    protected Material getDisplayMaterial(Material original) {
+    protected Material getDisplayMaterial(World world, MarkerData marker) {
+        Material original = super.getDisplayMaterial(world, marker);
         return (original == Material.AIR || original.isAir()) ? Material.RED_STAINED_GLASS : Material.REDSTONE_BLOCK;
     }
 
+    @Override
+    public void triggerEnter(Player player, MarkerData marker) {
+
+        gameManager.getRaceManager().handlePlayerDeath(player);
+    }
+
+    @Override
+    public void triggerExit(Player player) {
+
+    }
+/*
     @Override
     protected Material resolveDisplayMaterial(MarkerData marker) {
         if (getTypeId().equalsIgnoreCase(marker.getTypeId())) {
             return getDisplayMaterial(marker.getOriginalMaterial());
         }
         return super.resolveDisplayMaterial(marker);
-    }
+    }*/
 }

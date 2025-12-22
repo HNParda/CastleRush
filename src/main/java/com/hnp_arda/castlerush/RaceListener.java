@@ -29,13 +29,7 @@ public record RaceListener(GameManager gameManager) implements Listener {
         Player player = event.getPlayer();
         RaceManager raceManager = gameManager.getRaceManager();
 
-        raceManager.checkEndReached(player, event.getTo());
-
-        raceManager.handleCheckpoint(player, event.getTo());
-
-        raceManager.handleDeathzone(player, event.getTo());
-
-        raceManager.handleEffectZone(player, event.getTo());
+        raceManager.checkTrigger(player, event.getFrom(), event.getTo());
     }
 
     @EventHandler
@@ -50,7 +44,7 @@ public record RaceListener(GameManager gameManager) implements Listener {
         if (progress == null || progress.isFinished()) return;
 
         RaceManager raceManager = gameManager.getRaceManager();
-        raceManager.handlePlayerDeath(player, progress, findCastleByWorld(player.getWorld()));
+        raceManager.handlePlayerDeath(player);
 
     }
 

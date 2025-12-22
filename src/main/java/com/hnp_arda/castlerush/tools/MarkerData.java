@@ -1,9 +1,9 @@
 package com.hnp_arda.castlerush.tools;
 
-import com.hnp_arda.castlerush.tools.effect.Effect;
-import com.hnp_arda.castlerush.tools.effect.EffectRegistry;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.entity.Player;
 
 public class MarkerData {
 
@@ -11,22 +11,21 @@ public class MarkerData {
     private final String typeId;
     private final String translationKey;
     private Material originalMaterial;
-    private Material displayMaterial;
-    private String effectTypeName;
-    private Effect effect;
-    private int amplifier = 1;
+    private final Tool tool;
+    private String advancedToolData;
 
-    public MarkerData(Location location, Material originalMaterial, String typeId, String translationKey, Material displayMaterial) {
+    public MarkerData(Tool tool, Location location, Material originalMaterial, String typeId, String translationKey) {
         this.location = location;
         this.originalMaterial = originalMaterial;
         this.typeId = typeId;
         this.translationKey = translationKey;
-        this.displayMaterial = displayMaterial;
+        this.tool = tool;
     }
-//WIRD NOCH GEÄNDERT HARDCODED FSKadDKS
-    public MarkerData(Location location, Material originalMaterial, String typeId, String translationKey, Material displayMaterial, Effect effect) {
-        this(location, originalMaterial, typeId, translationKey, displayMaterial);
-        setEffect(effect);
+
+    //WIRD NOCH GEÄNDERT HARDCODED FSKadDKS
+    public MarkerData(Tool tool, Location location, Material originalMaterial, String typeId, String translationKey, String advancedToolData) {
+        this(tool, location, originalMaterial, typeId, translationKey);
+        this.advancedToolData = advancedToolData;
     }
 
     public static String formatLocation(Location loc) {
@@ -54,32 +53,31 @@ public class MarkerData {
     }
 
     public Material getDisplayMaterial() {
-        return displayMaterial != null ? displayMaterial : originalMaterial;
+        World world =  location.getWorld();
+        Material originalMaterial = world.getBlockAt(getLocation()).getType();
+        setOriginalMaterial(originalMaterial);
+        return tool.getDisplayMaterial(world, this);
     }
 
-    public void setDisplayMaterial(Material displayMaterial) {
-        this.displayMaterial = displayMaterial;
+    public String getAdvancedToolData() {
+        return advancedToolData;
     }
 
-    public Effect getEffect() {
-        if (effect != null) return effect;
-        if (effectTypeName != null) {
-            effect = EffectRegistry.byId(effectTypeName);
-        }
-        return effect;
+    public void setAdvancedToolData(String advancedToolData) {
+        this.advancedToolData = advancedToolData;
     }
 
-    public void setEffect(Effect effect) {
-        this.effect = effect;
-        this.effectTypeName = effect != null ? effect.getEffectName() : null;
+    public void triggerMarkerEnter(Player player) {
+        tool.triggerEnter(player, this);
     }
 
-    public int getAmplifier() {
-        return amplifier;
+    public void triggerMarkerExit(Player player) {
+        tool.triggerExit(player);
     }
 
-    public void setAmplifier(int amplifier) {
-        this.amplifier = amplifier;
+    public boolean isAdvancedMarker() {
+        return !getAdvancedToolData().isEmpty();
     }
+
 
 }

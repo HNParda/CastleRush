@@ -18,6 +18,16 @@ public class MarkerViewerTool extends Tool {
     }
 
     @Override
+    public void triggerEnter(Player player, MarkerData marker) {
+
+    }
+
+    @Override
+    public void triggerExit(Player player) {
+
+    }
+
+    @Override
     public Material getToolItem() {
         return Material.GOLD_INGOT;
     }

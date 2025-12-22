@@ -3,6 +3,7 @@ package com.hnp_arda.castlerush.tools;
 import com.hnp_arda.castlerush.PlayerCastle;
 import com.hnp_arda.castlerush.GameManager;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 
@@ -43,7 +44,17 @@ public class CheckpointTool extends Tool {
     }
 
     @Override
-    protected Material getDisplayMaterial(Material original) {
+    protected Material getDisplayMaterial(World world, MarkerData marker) {
         return Material.GOLD_BLOCK;
+    }
+
+    @Override
+    public void triggerEnter(Player player, MarkerData marker) {
+        gameManager.getRaceManager().setCheckpoint(player, marker.getLocation());
+    }
+
+    @Override
+    public void triggerExit(Player player) {
+
     }
 }

@@ -9,6 +9,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -28,10 +29,12 @@ public class EffectTool extends AdvancedTool implements Listener {
 
     private final List<Effect> effectTypes = new ArrayList<>(EffectRegistry.all());
     private final Map<UUID, EffectSelection> selections = new HashMap<>();
+    private final Map<UUID, EffectTool.ActiveEffect> activeEffects;
 
     public EffectTool(GameManager gameManager) {
         super(gameManager);
         gameManager.getPlugin().getServer().getPluginManager().registerEvents(this, gameManager.getPlugin());
+        this.activeEffects = new HashMap<>();
 
     }
 
@@ -155,27 +158,21 @@ public class EffectTool extends AdvancedTool implements Listener {
 
         List<Location> regionBlocks = getBlocksBetween(start, end);
 
-        RegionToggleResult result = toggleRegionMarkers(
-                player,
-                playerCastle,
-                regionBlocks,
-                getTypeId(),
-                startInZone && endInZone,
-                loc -> {
-                    Material original = loc.getBlock().getType();
-                    Material display = selectedEffect.getDisplayMaterial(original == Material.AIR || original.isAir());
-                    MarkerData m = new MarkerData(loc.clone(), original, getTypeId(), "tools.effect.name", display, selectedEffect);
-                    EffectSelection selection = getSelection(player);
-                    m.setAmplifier(selection != null ? clampLevel(selection.amplifier()) : 1);
-                    return m;
-                },
-                (marker, original) -> {
-                    marker.setEffect(selectedEffect);
-                    marker.setDisplayMaterial(selectedEffect.getDisplayMaterial(original == Material.AIR || original.isAir()));
-                    EffectSelection selection = getSelection(player);
-                    marker.setAmplifier(selection != null ? clampLevel(selection.amplifier()) : 1);
-                }
-        );
+        RegionToggleResult result = toggleRegionMarkers(player, playerCastle, regionBlocks, getTypeId(), startInZone && endInZone, loc -> {
+            Material original = loc.getBlock().getType();
+            //Material display = selectedEffect.getDisplayMaterial(original == Material.AIR || original.isAir());
+            EffectSelection selection = getSelection(player);
+            int amplifier = selection != null ? clampLevel(selection.amplifier()) : 1;
+            String advancedToolData = String.format("effect;%s;%s", selectedEffect.getEffectName(), amplifier);
+            return new MarkerData(this, loc.clone(), original, getTypeId(), "tools.effect.name", advancedToolData);
+        }/*, (marker) -> {
+
+            EffectSelection selection = getSelection(player);
+            int amplifier = selection != null ? clampLevel(selection.amplifier()) : 1;
+            String advancedToolData = String.format("effect;%s;%s", selectedEffect.getEffectName(), amplifier);
+            marker.setAdvancedToolData(advancedToolData);
+            // marker.setDisplayMaterial(selectedEffect.getDisplayMaterial(original == Material.AIR || original.isAir()));
+        }*/);
 
         player.sendMessage(Component.text(""));
         if (result.removedMode()) {
@@ -255,7 +252,6 @@ public class EffectTool extends AdvancedTool implements Listener {
         return slots;
     }
 
-
     private void updateToolNameInHand(Player player) {
         Effect effect = getSelectedEffect(player);
         if (effect == null) return;
@@ -263,8 +259,7 @@ public class EffectTool extends AdvancedTool implements Listener {
         EffectSelection selection = selections.get(player.getUniqueId());
         String effectName = getEffectLabel(effect);
         int level = selection != null ? selection.amplifier() : 1;
-        Component name = Component.text(lang().get("tools.effect.name") + " ", NamedTextColor.YELLOW)
-                .append(Component.text("(" + effectName + " " + level + ")", effect.getColor()));
+        Component name = Component.text(lang().get("tools.effect.name") + " ", NamedTextColor.YELLOW).append(Component.text("(" + effectName + " " + level + ")", effect.getColor()));
         ItemStack item = player.getInventory().getItemInMainHand();
         if (item.getType() != getToolItem()) return;
         ItemMeta meta = item.getItemMeta();
@@ -283,17 +278,36 @@ public class EffectTool extends AdvancedTool implements Listener {
         EffectSelection sel = selections.computeIfAbsent(player.getUniqueId(), id -> new EffectSelection(finalFallback, 1));
         return sel.effect();
     }
+/*
+    @Override
+    protected Material resolveDisplayMaterial(MarkerData marker) {
+        if (getTypeId().equalsIgnoreCase(marker.getTypeId()) && marker.isAdvancedMarker()) {
+            Effect effect = getEffectByMarkerData(marker);
+            if (effect == null) return null;
+            return effect.getDisplayMaterial(marker.getOriginalMaterial() == Material.AIR || marker.getOriginalMaterial().isAir());
+        } return super.resolveDisplayMaterial(marker);
+    }*/
 
     private Component guiTitle() {
         return Component.text(lang().get("tools.effect.messages.gui_title"));
     }
 
-    @Override
-    protected Material resolveDisplayMaterial(MarkerData marker) {
-        if (getTypeId().equalsIgnoreCase(marker.getTypeId()) && marker.getEffect() != null) {
-            return marker.getEffect().getDisplayMaterial(marker.getOriginalMaterial() == Material.AIR || marker.getOriginalMaterial().isAir());
-        }
-        return super.resolveDisplayMaterial(marker);
+    private Effect getEffectByMarkerData(MarkerData marker) {
+        if (!marker.isAdvancedMarker()) return null;
+        String advancedToolData = marker.getAdvancedToolData();
+        String[] data = advancedToolData.split(";");
+        if (data[0].equals("effect") || data.length != 3) return null;
+        String effectName = data[1];
+        return effectTypes.stream().filter(effect -> effect.getEffectName().equals(effectName)).toList().getFirst();
+    }
+
+    private ActiveEffect getActiveEffectByMarkerData(MarkerData marker) {
+        if (!marker.isAdvancedMarker()) return null;
+        String advancedToolData = marker.getAdvancedToolData();
+        String[] data = advancedToolData.split(";");
+        if (data[0].equals("effect") || data.length != 3) return null;
+        Effect effect = effectTypes.stream().filter(e -> e.getEffectName().equals(data[1])).toList().getFirst();
+        return new ActiveEffect(effect, Integer.parseInt(data[2]));
     }
 
     private EffectSelection getSelection(Player player) {
@@ -364,6 +378,68 @@ public class EffectTool extends AdvancedTool implements Listener {
             player.sendActionBar(Component.text(lang().get("tools.effect.messages.applied", getEffectLabel(selected), level), selected.getColor()));
         }
         updateToolNameInHand(player);
+    }
+
+    @Override
+    protected Material getDisplayMaterial(World world, MarkerData marker) {
+        Effect selectedEffect = getEffectByMarkerData(marker);
+        Material original = super.getDisplayMaterial(world, marker);
+        if (selectedEffect == null) return null;
+        return selectedEffect.getDisplayMaterial(original == Material.AIR || original.isAir());
+    }
+
+    @Override
+    public void triggerEnter(Player player, MarkerData marker) {
+
+        ActiveEffect effect = getActiveEffectByMarkerData(marker);
+        ActiveEffect current = activeEffects.get(player.getUniqueId());
+
+        if (effect == null) {
+            if (current != null) {
+                clearEffect(player, current);
+                activeEffects.remove(player.getUniqueId());
+            }
+            return;
+        }
+        if (!isSameEffect(effect, current)) {
+            if (current != null) {
+                clearEffect(player, current);
+            }
+            applyEffect(player, effect);
+            activeEffects.put(player.getUniqueId(), effect);
+        }
+    }
+
+    @Override
+    public void triggerExit(Player player) {
+
+        ActiveEffect current = activeEffects.get(player.getUniqueId());
+
+        if (current != null) {
+            clearEffect(player, current);
+            activeEffects.remove(player.getUniqueId());
+        }
+
+    }
+
+    private void applyEffect(Player player, ActiveEffect effect) {
+        if (effect == null || effect.effect() == null) return;
+        effect.effect().apply(player, effect.level());
+    }
+
+    private void clearEffect(Player player, ActiveEffect effect) {
+        if (effect == null || effect.effect() == null) return;
+        effect.effect().clear(player);
+    }
+
+    private boolean isSameEffect(ActiveEffect first, ActiveEffect second) {
+        if (first == null || second == null) {
+            return first == second;
+        }
+        return first.effect().getEffectName().equalsIgnoreCase(second.effect().getEffectName()) && first.level() == second.level();
+    }
+
+    private record ActiveEffect(com.hnp_arda.castlerush.tools.effect.Effect effect, int level) {
     }
 
     private record EffectSelection(Effect effect, int amplifier) {

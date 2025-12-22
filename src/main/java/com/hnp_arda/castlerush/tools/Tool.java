@@ -7,6 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -49,18 +50,15 @@ public abstract class Tool {
         }.runTaskLater(gameManager.getPlugin(), 2L);
     }
 
-    protected void updateMarker(Player player, MarkerData marker) {
-        Material originalMaterial = player.getWorld().getBlockAt(marker.getLocation()).getType();
-        marker.setOriginalMaterial(originalMaterial);
-        marker.setDisplayMaterial(resolveDisplayMaterial(marker));
-        player.sendBlockChange(marker.getLocation(), marker.getDisplayMaterial().createBlockData());
-    }
 
     protected void revealMarkers(Player player, PlayerCastle playerCastle, String markerType) {
         new BukkitRunnable() {
             @Override
             public void run() {
-                playerCastle.getMarker(markerType).forEach(marker -> updateMarker(player, marker));
+                playerCastle.getMarker(markerType).forEach(marker -> {
+                    gameManager.getPlugin().getLogger().info("aaaa " +  marker.getDisplayMaterial() + "  " + getDisplayMaterial(player.getWorld(), marker));
+                    sendMarker(player, marker.getLocation(), marker.getDisplayMaterial().createBlockData());
+                });
             }
         }.runTaskLater(gameManager.getPlugin(), 2L);
     }
@@ -80,7 +78,7 @@ public abstract class Tool {
     protected void placeSimpleMarker(Player player, PlayerCastle playerCastle, String typeId, Location location) {
         String translationKey = "tools." + typeId.toLowerCase() + ".name";
         MarkerData existingAtLocation = playerCastle.getLocation(location);
-        if (existingAtLocation != null) {
+        if (existingAtLocation != null && existingAtLocation.isAdvancedMarker()) {
             String displayName = lang().get(translationKey);
             String existingName = lang().get(existingAtLocation.getTranslationKey());
             player.sendMessage(Component.text(lang().get("tools.advanced_tool.blocked_existing", displayName, existingName), NamedTextColor.RED));
@@ -93,7 +91,7 @@ public abstract class Tool {
                 playerCastle.removeMarker(oldMarker.getFirst());
             }
             //WIRD NOCH GEÄNDERT DAMIT ES NCIHTH HARDCODED IST
-        } else if (typeId.equalsIgnoreCase("checkpoint")) {
+        } else if (typeId.equalsIgnoreCase("mcheckpoint")) {
             MarkerData m = playerCastle.getLocation(location);
             if (m != null) {
                 sendMarker(player, m.getLocation(), m.getOriginalMaterial().createBlockData());
@@ -106,8 +104,7 @@ public abstract class Tool {
         }
 
         Material originalMaterial = location.getBlock().getType();
-        Material displayMaterial = getDisplayMaterial(originalMaterial);
-        MarkerData marker = new MarkerData(location.clone(), originalMaterial, typeId, translationKey, displayMaterial);
+        MarkerData marker = new MarkerData(this, location.clone(), originalMaterial, typeId, translationKey);
         playerCastle.addMarker(marker);
 
         String displayName = lang().get(translationKey);
@@ -153,14 +150,18 @@ public abstract class Tool {
         player.getInventory().addItem(item);
     }
 
-    protected Material getDisplayMaterial(Material original) {
-        return original;
+    protected Material getDisplayMaterial(World world, MarkerData marker) {
+        return world.getBlockAt(marker.getLocation()).getType();
     }
 
+    public abstract void triggerEnter(Player player, MarkerData marker);
+
+    public abstract void triggerExit(Player player);
+/*
     protected Material resolveDisplayMaterial(MarkerData marker) {
         if (marker.getDisplayMaterial() != null) {
             return marker.getDisplayMaterial();
         }
         return marker.getOriginalMaterial();
-    }
+    }*/
 }

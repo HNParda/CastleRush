@@ -12,6 +12,8 @@ public class PlayerCastle {
     private final World world;
     private final World nether;
     private final List<MarkerData> markers;
+    private Location castleStart;
+    private Location castleEnd;
     private Location deathzoneStart;
     private Location effectZoneStart;
 
@@ -22,6 +24,7 @@ public class PlayerCastle {
         this.markers = new ArrayList<>();
         this.deathzoneStart = null;
         this.effectZoneStart = null;
+        castleStart = castleEnd = world.getSpawnLocation().add(0.5, 1, 0.5);
     }
 
 
@@ -83,5 +86,23 @@ public class PlayerCastle {
 
     public List<MarkerData> getMarkers() {
         return markers;
+    }
+
+    public Location getStart() {
+        if (castleStart == null) return world.getSpawnLocation();
+        else return castleStart;
+    }
+
+    public void setStart(Location newStart) {
+        world.setSpawnLocation(newStart);
+        castleStart = newStart;
+    }
+
+    public Location getEnd() {
+        return castleEnd;
+    }
+
+    public void setEnd(Location newEnd) {
+        castleEnd = newEnd;
     }
 }

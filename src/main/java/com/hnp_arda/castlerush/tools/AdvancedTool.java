@@ -64,8 +64,9 @@ public abstract class AdvancedTool extends Tool{
                                                      PlayerCastle playerCastle,
                                                      List<Location> regionBlocks,
                                                      String typeId,
-                                                     Function<Location, MarkerData> markerFactory,
-                                                     BiConsumer<MarkerData, Material> existingUpdater) {
+                                                     Function<Location, MarkerData> markerFactory
+                                                   //  ,BiConsumer<MarkerData, Material> existingUpdater
+    ) {
         int added = 0;
         int replaced = 0;
         List<String> replacedTypes = new ArrayList<>();
@@ -83,8 +84,8 @@ public abstract class AdvancedTool extends Tool{
 
             Material original = loc.getBlock().getType();
             if (existingMarker != null && existingMarker.getTypeId().equalsIgnoreCase(typeId)) {
-                existingMarker.setOriginalMaterial(original);
-                existingUpdater.accept(existingMarker, original);
+               /* existingMarker.setOriginalMaterial(original);*/
+              //  existingUpdater.accept(existingMarker);
                 sendMarker(player, existingMarker.getLocation(), existingMarker.getDisplayMaterial().createBlockData());
             } else {
                 MarkerData marker = markerFactory.apply(loc);
@@ -102,13 +103,15 @@ public abstract class AdvancedTool extends Tool{
                                                      List<Location> regionBlocks,
                                                      String typeId,
                                                      boolean removeMode,
-                                                     Function<Location, MarkerData> markerFactory,
-                                                     BiConsumer<MarkerData, Material> existingUpdater) {
+                                                     Function<Location, MarkerData> markerFactory
+                                                 //   , BiConsumer<MarkerData, Material> existingUpdater
+    ) {
         if (removeMode) {
             int removed = removeRegionMarkers(player, playerCastle, regionBlocks, typeId);
             return new RegionToggleResult(true, removed, new RegionChangeResult(0, 0, List.of()));
         }
-        RegionChangeResult change = upsertRegionMarkers(player, playerCastle, regionBlocks, typeId, markerFactory, existingUpdater);
+        RegionChangeResult change = upsertRegionMarkers(player, playerCastle, regionBlocks, typeId, markerFactory//, existingUpdater
+                 );
         return new RegionToggleResult(false, 0, change);
     }
 
