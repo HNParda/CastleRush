@@ -236,7 +236,7 @@ public class GameManager {
             scoreboardManager.removeAllScoreboards();
         }
 
-        File castlesData = new File(plugin.getDataFolder(), "Castles Data");
+        File castlesData = new File(plugin.getDataFolder(), "Castle Saves");
 
         try {
             FileUtils.deleteDirectory(castlesData);
