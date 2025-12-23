@@ -178,7 +178,7 @@ public record CommandManager(GameManager gameManager) implements CommandExecutor
     }
 
     private void handleEnd(CommandSender sender) {
-        gameManager.finishWithoutReset();
+        gameManager.end();
         sender.sendMessage(Component.text(languageManager.get("command.end.finished"), NamedTextColor.GREEN));
     }
 

@@ -1,12 +1,14 @@
 package com.hnp_arda.castlerush.managers;
 
 import com.hnp_arda.castlerush.Main;
-import com.hnp_arda.castlerush.PlayerCastle;
+import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.tools.ToolsManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -79,11 +81,11 @@ public class GameManager {
     }
 
     public void startBuild() {
-//IMPLEMENT LoaDING PREVIOUS MARKERS  (werden bei server stop nicht gespeichert)
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 
-        if (players.isEmpty()) {
-            Bukkit.broadcast(Component.text(languageManager.get("command.start.no_players"), NamedTextColor.RED));
+        // if (players.size() < 2) {
+        if (false) {
+            Bukkit.broadcast(Component.text(languageManager.get("command.start.not_enough_players"), NamedTextColor.RED));
             return;
         }
 
@@ -151,13 +153,14 @@ public class GameManager {
             scoreboardManager.startAutoUpdate();
         }
 
+        loadCastles();
+
         startBuildTimer();
     }
 
     private void giveGoldTools(Player player) {
         player.getInventory().clear();
-        getToolsManager().getTools().forEach(tool ->
-                tool.giveToPlayer(player));
+        getToolsManager().getTools().forEach(tool -> tool.giveToPlayer(player));
     }
 
     private void startBuildTimer() {
@@ -180,6 +183,8 @@ public class GameManager {
 
     public void startRace() {
 
+        saveCastles();
+
         //IMPLEMENT CHECK IF PLAYERS ARE SAME AND CASTLE WORLDS EXYISTING
         if (buildTimer != null) buildTimer.cancel();
         if (scoreboardManager != null) scoreboardManager.stopAutoUpdate();
@@ -191,7 +196,7 @@ public class GameManager {
 
         if (scoreboardManager != null) scoreboardManager.updateAllScoreboards();
 
-        playerCastles.forEach((uuid, playerIsland) -> playerIsland.getMarkers().forEach(markerData -> Objects.requireNonNull(Bukkit.getPlayer(uuid)).sendBlockChange(markerData.getLocation(), markerData.getOriginalMaterial().createBlockData())));
+        playerCastles.forEach((uuid, playerCastle) -> playerCastle.getMarkers().forEach(markerData -> Objects.requireNonNull(Bukkit.getPlayer(uuid)).sendBlockChange(markerData.getLocation(), markerData.getOriginalMaterial().createBlockData())));
 
         raceManager.startRace(participants);
 
@@ -201,13 +206,66 @@ public class GameManager {
         applyPvpRule(pvpEnabled);
     }
 
-    public void finishWithoutReset() {
+    public void end() {
+        saveCastles();
         if (buildTimer != null) buildTimer.cancel();
         if (scoreboardManager != null) {
             scoreboardManager.stopAutoUpdate();
         }
         gameState = GameState.WAITING;
     }
+
+    private void saveCastles() {
+
+        playerCastles.forEach((uuid, playerCastle) -> playerCastle.saveCastle(uuid, getPlugin()));
+
+
+    }
+
+
+    private void saveCastles2() {
+        List<String> castlesData = new ArrayList<>();
+
+        // playerCastles.forEach((_ignored, playerCastle) -> castlesData.add(playerCastle.getSaveData()));
+        playerCastles.forEach((_ignored, playerCastle) -> {
+            String a = playerCastle.getSaveData2();
+            getPlugin().getLogger().info("aaa" + a);
+            castlesData.add(a);
+        });
+
+
+        NamespacedKey key = new NamespacedKey(getPlugin(), "example-key"); // Create a NamespacedKey
+        World world = Bukkit.getServer().getWorlds().getFirst();
+
+        PersistentDataContainer pdc = world.getPersistentDataContainer();
+        pdc.set(key, PersistentDataType.STRING, "I love tacos!");
+
+
+/*
+        File castlesData = new File(plugin.getDataFolder(), "Castles Data");
+
+
+        // Converts Java object to File
+        try (Writer writer = new FileWriter("staff.json")) {
+            gson.toJson(staff, writer);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }*/
+
+    }
+
+    protected void loadCastles() {
+        if (!checkPlayers()) return;
+        playerCastles.forEach((uuid, castle) -> {
+            // castle.loadCastle()
+            castle.loadCastle(uuid, plugin, this);
+        });
+    }
+
+    private boolean checkPlayers() {
+        return true;
+    }
+
 
     public void cleanup() {
 
@@ -225,6 +283,13 @@ public class GameManager {
         if (scoreboardManager != null) {
             scoreboardManager.stopAutoUpdate();
             scoreboardManager.removeAllScoreboards();
+        }
+
+        File castlesData = new File(plugin.getDataFolder(), "Castles Data");
+
+        try {
+            FileUtils.deleteDirectory(castlesData);
+        } catch (IOException ignored) {
         }
 
         World hub = Bukkit.getWorld("castle_rush_spawn");
@@ -245,24 +310,22 @@ public class GameManager {
 
         if (worldsToDelete.isEmpty()) {
             File[] folders = getPlugin().getServer().getWorldContainer().listFiles();
-            if (folders != null)
-                for (File folder : folders) {
-                    if (folder.isDirectory() && folder.getName().startsWith("castle_rush_")) {
-                        try {
-                            FileUtils.deleteDirectory(new File(folder.getAbsolutePath()));
-                        } catch (IOException e) {
-                            getPlugin().getLogger().severe(e.getMessage());
-                        }
+            if (folders != null) for (File folder : folders) {
+                if (folder.isDirectory() && folder.getName().startsWith("castle_rush_")) {
+                    try {
+                        FileUtils.deleteDirectory(new File(folder.getAbsolutePath()));
+                    } catch (IOException e) {
+                        getPlugin().getLogger().severe(e.getMessage());
                     }
                 }
-        } else
-            for (World world : worldsToDelete) {
-                String name = world.getName();
-                Bukkit.unloadWorld(world, false);
-                File folder = world.getWorldFolder();
-                deleteWorld(folder);
-                plugin.getLogger().info(name + " deleted");
             }
+        } else for (World world : worldsToDelete) {
+            String name = world.getName();
+            Bukkit.unloadWorld(world, false);
+            File folder = world.getWorldFolder();
+            deleteWorld(folder);
+            plugin.getLogger().info(name + " deleted");
+        }
 
         gameState = GameState.WAITING;
         participants.clear();

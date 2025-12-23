@@ -1,10 +1,10 @@
 package com.hnp_arda.castlerush.tools.tools;
 
-import com.hnp_arda.castlerush.PlayerCastle;
+import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.managers.RaceManager;
 import com.hnp_arda.castlerush.tools.BaseTool;
-import com.hnp_arda.castlerush.tools.MarkerData;
+import com.hnp_arda.castlerush.core.Marker;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -31,8 +31,17 @@ public class StartTool extends BaseTool {
     @Override
     public void handleInteract(PlayerInteractEvent event, PlayerCastle playerCastle) {
         if (event.getClickedBlock() == null) return;
-        playerCastle.setStart(event.getClickedBlock().getLocation());
-        placeSimpleMarker(event.getPlayer(), playerCastle, getTypeId(), event.getClickedBlock().getLocation());
+
+        interact(event.getPlayer(), playerCastle, getTypeId(), event.getClickedBlock().getLocation(), (result) -> {
+            if (result.equals(InteractResult.REMOVED)) playerCastle.setStart(null);
+            else if (!result.equals(InteractResult.CANCELED))
+                playerCastle.setStart(event.getClickedBlock().getLocation());
+        });
+    }
+
+    @Override
+    public boolean isReplacable() {
+        return false;
     }
 
     @Override
@@ -46,12 +55,12 @@ public class StartTool extends BaseTool {
     }
 
     @Override
-    protected Material getDisplayMaterial(World world, MarkerData marker) {
+    public Material getDisplayMaterial(World world, Marker marker) {
         return Material.EMERALD_BLOCK;
     }
 
     @Override
-    public void triggerEnter(Player player, MarkerData marker) {
+    public void triggerEnter(Player player, Marker marker) {
 
         if (player.getGameMode() == GameMode.SPECTATOR && player.getSpectatorTarget() == null) {
             RaceManager.RaceProgress progress = gameManager.getRaceManager().getPlayerProgress().get(player.getUniqueId());
@@ -70,6 +79,10 @@ public class StartTool extends BaseTool {
         gameManager.getRaceManager().setCheckpoint(player, marker.getLocation());
     }
 
+    @Override
+    protected boolean singleOnly() {
+        return true;
+    }
 
     @Override
     public void triggerExit(Player player) {

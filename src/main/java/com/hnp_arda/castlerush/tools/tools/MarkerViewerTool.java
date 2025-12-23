@@ -1,9 +1,9 @@
 package com.hnp_arda.castlerush.tools.tools;
 
 import com.hnp_arda.castlerush.managers.GameManager;
-import com.hnp_arda.castlerush.PlayerCastle;
+import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.tools.BaseTool;
-import com.hnp_arda.castlerush.tools.MarkerData;
+import com.hnp_arda.castlerush.core.Marker;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -20,7 +20,7 @@ public class MarkerViewerTool extends BaseTool {
     }
 
     @Override
-    public void triggerEnter(Player player, MarkerData marker) {
+    public void triggerEnter(Player player, Marker marker) {
 
     }
 

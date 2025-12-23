@@ -1,17 +1,24 @@
 package com.hnp_arda.castlerush.tools;
 
+import com.hnp_arda.castlerush.core.Marker;
+import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.managers.GameManager;
-import com.hnp_arda.castlerush.PlayerCastle;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Function;
+import java.util.*;
+import java.util.function.Consumer;
+
+import static com.hnp_arda.castlerush.core.Marker.formatLocation;
 
 public abstract class BaseAdvancedTool extends BaseTool {
+
+    private final Map<UUID, Location> zoneStarts = new HashMap<>();
+
 
     protected BaseAdvancedTool(GameManager gameManager) {
         super(gameManager);
@@ -22,6 +29,69 @@ public abstract class BaseAdvancedTool extends BaseTool {
 
     @Override
     public abstract void handleInteract(PlayerInteractEvent event, PlayerCastle playerCastle);
+
+    @Override
+    public void onSelect(Player player, PlayerCastle playerCastle) {
+        Location startLoc = getZoneStart(player);
+        if (startLoc != null) {
+            sendMarker(player, startLoc, getStartMaterial(player).createBlockData());
+            player.sendActionBar(Component.text(lang().get("tools.advanced_tool.action_end", getDisplayName()), NamedTextColor.GOLD));
+        }
+        revealMarkers(player, playerCastle, getTypeId());
+    }
+
+    protected abstract Material getStartMaterial(Player player);
+
+    protected void interact(Player player, Location location, PlayerCastle playerCastle, String advacedToolData, Consumer<InteractResult> result) {
+
+        Location start = getZoneStart(player);
+
+        if (start == null) {
+            setZoneStart(player, location.clone());
+            sendMarker(player, location.clone(), getStartMaterial(player).createBlockData());
+            player.sendMessage(Component.text(lang().get("tools.advanced_tool.start", formatLocation(location), getDisplayName()), NamedTextColor.RED));
+            player.sendActionBar(Component.text(lang().get("tools.advanced_tool.action_end", getDisplayName()), NamedTextColor.GOLD));
+            return;
+        }
+        removeZoneStart(player);
+
+        Location end = location.clone();
+
+        Marker startMarker = playerCastle.getLocation(start);
+        Marker endMarker = playerCastle.getLocation(end);
+
+        boolean startInZone = startMarker != null && startMarker.getAdvancedToolData().equals(advacedToolData);
+        boolean endInZone = endMarker != null && endMarker.getAdvancedToolData().equals(advacedToolData);
+
+        List<Location> regionBlocks = getBlocksBetween(start, end);
+
+
+        if (startInZone && endInZone) {
+            int removed = removeRegionMarkers(player, playerCastle, regionBlocks, getTypeId());
+            player.sendMessage(Component.text(lang().get("tools.advanced_tool.removed", removed, getDisplayName()), NamedTextColor.YELLOW));
+            player.sendMessage(Component.text(lang().get("tools.advanced_tool.total", playerCastle.getAdvancedMarkers(advacedToolData).size()), NamedTextColor.GRAY));
+            player.sendMessage(Component.text(""));
+            result.accept(InteractResult.REMOVED);
+            return;
+        }
+
+
+        RegionChangeResult change = upsertRegionMarkers(player, playerCastle, regionBlocks, advacedToolData);
+
+        player.sendMessage(Component.text(lang().get("tools.advanced_tool.end", getDisplayName(), formatLocation(location), getDisplayName()), NamedTextColor.RED));
+        player.sendMessage(Component.text(lang().get("tools.advanced_tool.added", change.added(), getDisplayName()), NamedTextColor.RED));
+        player.sendMessage(Component.text(lang().get("tools.advanced_tool.total", playerCastle.getAdvancedMarkers(advacedToolData).size()), NamedTextColor.GRAY));
+
+        if (change.replaced() > 0) {
+            player.sendMessage(Component.text(lang().get("tools.advanced_tool.replaced_total", change.replaced()), NamedTextColor.YELLOW));
+            player.sendMessage(Component.text(lang().get("tools.advanced_tool.replaced_list", String.join(", ", change.replacedTypes())), NamedTextColor.GRAY));
+            result.accept(InteractResult.REPLACED);
+        } else result.accept(InteractResult.PLACED);
+
+        player.sendMessage(Component.text(""));
+
+
+    }
 
 
     protected List<Location> getBlocksBetween(Location loc1, Location loc2) {
@@ -49,7 +119,7 @@ public abstract class BaseAdvancedTool extends BaseTool {
     protected int removeRegionMarkers(Player player, PlayerCastle playerCastle, List<Location> regionBlocks, String typeId) {
         int removed = 0;
         for (Location loc : regionBlocks) {
-            MarkerData marker = playerCastle.getLocation(loc);
+            Marker marker = playerCastle.getLocation(loc);
             if (marker != null && marker.getTypeId().equalsIgnoreCase(typeId)) {
                 sendMarker(player, marker.getLocation(), marker.getOriginalMaterial().createBlockData());
                 playerCastle.removeMarker(marker);
@@ -59,18 +129,14 @@ public abstract class BaseAdvancedTool extends BaseTool {
         return removed;
     }
 
-    protected RegionChangeResult upsertRegionMarkers(Player player,
-                                                     PlayerCastle playerCastle,
-                                                     List<Location> regionBlocks,
-                                                     String typeId,
-                                                     Function<Location, MarkerData> markerFactory) {
+    protected RegionChangeResult upsertRegionMarkers(Player player, PlayerCastle playerCastle, List<Location> regionBlocks, String advacedToolData) {
         int added = 0;
         int replaced = 0;
         List<String> replacedTypes = new ArrayList<>();
 
         for (Location loc : regionBlocks) {
-            MarkerData existingMarker = playerCastle.getLocation(loc);
-            if (existingMarker != null && !existingMarker.getTypeId().equalsIgnoreCase(typeId)) {
+            Marker existingMarker = playerCastle.getLocation(loc);
+            if (existingMarker != null && !existingMarker.getAdvancedToolData().equals(advacedToolData)) {
                 playerCastle.removeMarker(existingMarker);
                 replaced++;
                 String replacedName = lang().get(existingMarker.getTranslationKey());
@@ -79,10 +145,10 @@ public abstract class BaseAdvancedTool extends BaseTool {
                 }
             }
 
-            if (existingMarker != null && existingMarker.getTypeId().equalsIgnoreCase(typeId)) {
+            if (existingMarker != null && existingMarker.getAdvancedToolData().equals(advacedToolData)) {
                 sendMarker(player, existingMarker.getLocation(), existingMarker.getDisplayMaterial().createBlockData());
             } else {
-                MarkerData marker = markerFactory.apply(loc);
+                Marker marker = new Marker(this, loc.clone(), getTypeId());
                 playerCastle.addMarker(marker);
                 sendMarker(player, marker.getLocation(), marker.getDisplayMaterial().createBlockData());
             }
@@ -92,24 +158,25 @@ public abstract class BaseAdvancedTool extends BaseTool {
         return new RegionChangeResult(added, replaced, replacedTypes);
     }
 
-    protected RegionToggleResult toggleRegionMarkers(Player player,
-                                                     PlayerCastle playerCastle,
-                                                     List<Location> regionBlocks,
-                                                     String typeId,
-                                                     boolean removeMode,
-                                                     Function<Location, MarkerData> markerFactory) {
-        if (removeMode) {
-            int removed = removeRegionMarkers(player, playerCastle, regionBlocks, typeId);
-            return new RegionToggleResult(true, removed, new RegionChangeResult(0, 0, List.of()));
-        }
-        RegionChangeResult change = upsertRegionMarkers(player, playerCastle, regionBlocks, typeId, markerFactory);
-        return new RegionToggleResult(false, 0, change);
+    @Override
+    public boolean isReplacable() {
+        return false;
+    }
+
+    protected Location getZoneStart(Player player) {
+        if (!zoneStarts.containsKey(player.getUniqueId())) return null;
+        return zoneStarts.get(player.getUniqueId());
+    }
+
+    protected void setZoneStart(Player player, Location location) {
+        zoneStarts.put(player.getUniqueId(), location);
+    }
+
+    protected void removeZoneStart(Player player) {
+        zoneStarts.remove(player.getUniqueId());
     }
 
     protected record RegionChangeResult(int added, int replaced, List<String> replacedTypes) {
-    }
-
-    protected record RegionToggleResult(boolean removedMode, int removedCount, RegionChangeResult change) {
     }
 
 }

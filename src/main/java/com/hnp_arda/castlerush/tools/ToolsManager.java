@@ -2,7 +2,7 @@ package com.hnp_arda.castlerush.tools;
 
 import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.managers.GameManager.GameState;
-import com.hnp_arda.castlerush.PlayerCastle;
+import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.tools.tools.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -52,6 +52,14 @@ public class ToolsManager implements Listener {
         if (toolName == null || toolName.isEmpty()) return null;
         try {
             return TOOLS.stream().filter(t -> t.getName().equalsIgnoreCase(toolName)).toList().getFirst();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public BaseTool getToolByTypeID(String typeID) {
+        try {
+            return TOOLS.stream().filter(t -> t.getTypeId().equals(typeID)).toList().getFirst();
         } catch (Exception e) {
             return null;
         }

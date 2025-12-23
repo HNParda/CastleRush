@@ -36,12 +36,15 @@ public class Main extends JavaPlugin {
 
         createSpawnWorld();
 
-        Objects.requireNonNull(getCommand("castlerush")).setExecutor(new CommandManager(gameManager));
-
         gameManager = new GameManager(this);
 
+        Objects.requireNonNull(getCommand("castlerush")).setExecutor(new CommandManager(gameManager));
+
         SpawnListener spawnListener = new SpawnListener(this, gameManager, spawnIsland);
+        RaceListener raceListener = new RaceListener(gameManager);
+
         getServer().getPluginManager().registerEvents(spawnListener, this);
+        getServer().getPluginManager().registerEvents(raceListener, this);
 
         setupTimeControls();
         setupGameControls();
@@ -83,6 +86,7 @@ public class Main extends JavaPlugin {
 
             getLogger().info("CaslteRush Island created!");
         }
+        // spawnIsland.setTime(Time);
 
     }
 
@@ -135,20 +139,15 @@ public class Main extends JavaPlugin {
     }
 
     public void handleBtn(Location loc) {
-        if (loc.equals(subTimeBtnLoc))
-            updateTime(-5);
+        if (loc.equals(subTimeBtnLoc)) updateTime(-5);
 
-        else if (loc.equals(addTimeBtnLoc))
-            updateTime(+5);
+        else if (loc.equals(addTimeBtnLoc)) updateTime(+5);
 
-        else if (loc.equals(buildBtnLoc))
-            gameManager.startBuild();
+        else if (loc.equals(buildBtnLoc)) gameManager.startBuild();
 
-        else if (loc.equals(raceBtnLoc))
-            gameManager.startRace();
+        else if (loc.equals(raceBtnLoc)) gameManager.startRace();
 
-        else if (loc.equals(resetBtnLoc))
-            gameManager.resetGame();
+        else if (loc.equals(resetBtnLoc)) gameManager.resetGame();
 
     }
 
@@ -198,11 +197,10 @@ public class Main extends JavaPlugin {
         if (gameManager != null) {
             gameManager.cleanup();
         }
-        if (getDataFolder().exists()) {
-            try {
-                FileUtils.deleteDirectory(getDataFolder());
-            } catch (IOException ignored) {
-            }
+        try {
+            File languageDir = new File(getDataFolder(), "languages");
+            FileUtils.deleteDirectory(languageDir);
+        } catch (IOException ignored) {
         }
         getLogger().info("CaslteRush Plugin deactivated! ");
     }

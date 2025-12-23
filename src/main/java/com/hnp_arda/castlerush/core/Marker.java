@@ -1,23 +1,20 @@
-package com.hnp_arda.castlerush.tools;
+package com.hnp_arda.castlerush.core;
 
+import com.hnp_arda.castlerush.tools.BaseTool;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-public class MarkerData {
+public class Marker {
 
     private final Location location;
-    private final String typeId;
-    private final String translationKey;
     private final BaseTool tool;
     private Material originalMaterial;
-    private String advancedToolData;
+    private String advancedToolData = "";
 
-    public MarkerData(BaseTool tool, Location location, String typeId, String translationKey) {
+    public Marker(BaseTool tool, Location location) {
         this.location = location;
-        this.typeId = typeId;
-        this.translationKey = translationKey;
         this.tool = tool;
 
         World world = location.getWorld();
@@ -26,8 +23,8 @@ public class MarkerData {
 
     }
 
-    public MarkerData(BaseTool tool, Location location, String typeId, String translationKey, String advancedToolData) {
-        this(tool, location, typeId, translationKey);
+    public Marker(BaseTool tool, Location location, String advancedToolData) {
+        this(tool, location);
         this.advancedToolData = advancedToolData;
     }
 
@@ -48,11 +45,11 @@ public class MarkerData {
     }
 
     public String getTypeId() {
-        return typeId;
+        return tool.getTypeId();
     }
 
     public String getTranslationKey() {
-        return translationKey;
+        return tool.getTranslationKey();
     }
 
     public Material getDisplayMaterial() {
@@ -72,6 +69,10 @@ public class MarkerData {
         return m.isAir() || m == Material.AIR;
     }
 
+    public boolean isAdvancedToolMarker() {
+        return !getAdvancedToolData().isEmpty();
+    }
+
     public void triggerMarkerEnter(Player player) {
         tool.triggerEnter(player, this);
     }
@@ -80,9 +81,11 @@ public class MarkerData {
         tool.triggerExit(player);
     }
 
-    public boolean isAdvancedMarker() {
-        return !getAdvancedToolData().isEmpty();
+    public boolean isReplaceable() {
+        return tool.isReplacable();
     }
 
-
+    public BaseTool getTool() {
+        return tool;
+    }
 }

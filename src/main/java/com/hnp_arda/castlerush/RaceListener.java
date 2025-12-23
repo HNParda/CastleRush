@@ -19,16 +19,10 @@ import org.bukkit.event.player.PlayerPortalEvent;
 
 public record RaceListener(GameManager gameManager) implements Listener {
 
-    public RaceListener(GameManager gameManager) {
-        this.gameManager = gameManager;
-        gameManager.getPlugin().getServer().getPluginManager().registerEvents(this, gameManager.getPlugin());
-    }
-
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         if (gameManager.getGameState() != GameState.RACING) return;
-        if (event.getFrom().getBlock().equals(event.getTo().getBlock())) return;
-
+        if (!event.hasChangedBlock()) return;
 
         Player player = event.getPlayer();
         RaceManager raceManager = gameManager.getRaceManager();

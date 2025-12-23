@@ -13,7 +13,15 @@ tools:
   header: "--- Available tools ---"
   unknown: "Unknown tool. Use: /castlerush help tools"
   received: "Received %s Tool."
+  single_marker: "Warning: %s at %s got removed."
+  not_replaceable: "%s cannot be placed here; %s is not replaceable."
   display: "Shown as %s"
+  removed: "Removed %s"
+  removed_detail: "%s removed at %s"
+  placed: "%s Placed"
+  placed_detail: "%s placed at %s"
+  replaced: "Replaced by %s."
+  replaced_detail: "%s block was replaced by %s at %s."
 
   start:
     name: "Start"
@@ -46,10 +54,6 @@ tools:
     display: "Gold Ingot"
 
   advanced_tool:
-    removed_detail: "%s removed at %s"
-    placed: "placed"
-    placed_detail: "%s placed at %s"
-    blocked_existing: "%s cannot be placed here; already marked as %s."
     replaced: "Warning: %s block was replaced."
     replaced_total: "Warning: %d other markers were replaced."
     replaced_list: "Replaced: %s"
@@ -104,7 +108,7 @@ command:
   start:
     already_running: "A game is already running."
     not_running: "There was no build phase yet."
-    no_players: "No players online."
+    not_enough_players: "There arent enough players online."
     header: "Castle Rush STARTED!"
     players: "Players: %d"
     time: "Build time: %d minutes"
@@ -135,7 +139,7 @@ race:
   castle_complete: "%s completed %s's Castle in %d min %d sec."
   back_hint: "(Walk to the end to go back)"
   checkpoint: "Checkpoint reached."
-  deathzone: "Deathzone! Back to checkpoint."
+  dead: "Dead! Back to checkpoint."
   all_finished: "%s finished ALL Castles."
   total_time: "Total time: %d min %d sec"
   respawn_checkpoint: "Back to the last checkpoint."

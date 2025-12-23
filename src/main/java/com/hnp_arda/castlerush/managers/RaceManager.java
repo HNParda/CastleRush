@@ -1,8 +1,7 @@
 package com.hnp_arda.castlerush.managers;
 
-import com.hnp_arda.castlerush.PlayerCastle;
-import com.hnp_arda.castlerush.RaceListener;
-import com.hnp_arda.castlerush.tools.MarkerData;
+import com.hnp_arda.castlerush.core.PlayerCastle;
+import com.hnp_arda.castlerush.core.Marker;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -24,9 +23,9 @@ public class RaceManager {
     private final GameManager gameManager;
     private final Map<UUID, RaceProgress> playerProgress;
     private final Map<UUID, ArmorStand> spectatorHeads;
+    private final List<PlayerCastle> castles;
     public List<UUID> teleporting;
     private BukkitRunnable spectatorHeadTask;
-    private final List<PlayerCastle> castles;
     private long raceStartTime;
 
     public RaceManager(GameManager gameManager) {
@@ -35,8 +34,6 @@ public class RaceManager {
         this.spectatorHeads = new HashMap<>();
         this.teleporting = new ArrayList<>();
         castles = new ArrayList<>();
-
-        gameManager.getPlugin().getServer().getPluginManager().registerEvents(new RaceListener(gameManager), gameManager.getPlugin());
     }
 
     public void startRace(Set<UUID> participants) {
@@ -72,6 +69,9 @@ public class RaceManager {
     }
 
     public void teleportToStart(Player player, int castleIndex) {
+
+        player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+
         if (castleIndex >= castles.size()) {
             finishRace(player);
             return;
@@ -106,6 +106,7 @@ public class RaceManager {
     }
 
     public void checkTrigger(Player player, Location oldLocation, Location newLocation) {
+
         RaceProgress progress = playerProgress.get(player.getUniqueId());
         if (progress == null) return;
 
@@ -116,30 +117,30 @@ public class RaceManager {
 
         if (playerCastle == null) return;
 
-        List<MarkerData> oldLocMarkers = playerCastle.getMarkers().stream().filter(marker -> {
+        Marker oldMarker = playerCastle.getMarkers().stream().filter(marker -> {
             Location loc = marker.getLocation();
             boolean y = oldLocation.getBlockY() == loc.getBlockY();
             y = marker.isAir() ? y : y || oldLocation.getBlockY() == loc.getBlockY() + 1;
             return oldLocation.getBlockX() == loc.getBlockX() && oldLocation.getBlockZ() == loc.getBlockZ() && y;
-        }).toList();
+        }).findFirst().orElse(null);
 
-        List<MarkerData> newLocMarkers = playerCastle.getMarkers().stream().filter(marker -> {
+        Marker newMarker = playerCastle.getMarkers().stream().filter(marker -> {
             Location loc = marker.getLocation();
             boolean y = newLocation.getBlockY() == loc.getBlockY();
             y = marker.isAir() ? y : y || newLocation.getBlockY() == loc.getBlockY() + 1;
             return newLocation.getBlockX() == loc.getBlockX() && newLocation.getBlockZ() == loc.getBlockZ() && y;
-        }).toList();
+        }).findFirst().orElse(null);
 
-        if (oldLocMarkers.isEmpty() && newLocMarkers.isEmpty()) return;
 
-        if (newLocMarkers.isEmpty()) {
-            MarkerData oldMarker = oldLocMarkers.getFirst();
+        if (oldMarker == null && newMarker == null) return;
+
+        if (oldMarker != null && newMarker != null) {
+            if (oldMarker.isAdvancedToolMarker() && oldMarker.getAdvancedToolData().equals(newMarker.getAdvancedToolData()))
+                return;
             oldMarker.triggerMarkerExit(player);
-        } else {
-            MarkerData newMarker = newLocMarkers.getFirst();
             newMarker.triggerMarkerEnter(player);
-        }
-
+        } else if (oldMarker != null) oldMarker.triggerMarkerExit(player);
+        else newMarker.triggerMarkerEnter(player);
 
     }
 
@@ -179,7 +180,8 @@ public class RaceManager {
             player.setFireTicks(0);
             player.setFallDistance(0);
             player.setGameMode(GameMode.SURVIVAL);
-            player.sendMessage(Component.text(languageManager.get("race.deathzone"), NamedTextColor.RED));
+            gameManager.getPlugin().getLogger().info("death aa");
+            player.sendMessage(Component.text(languageManager.get("race.dead"), NamedTextColor.RED));
         });
     }
 
@@ -211,7 +213,7 @@ public class RaceManager {
     public void createSpectatorHead(Player spectator) {
         removeSpectatorHead(spectator.getUniqueId());
 
-        ArmorStand stand = spectator.getWorld().spawn(spectator.getLocation().add(0, 0.3, 0), ArmorStand.class, as -> {
+        ArmorStand stand = spectator.getWorld().spawn(spectator.getLocation().add(0, 0, 0), ArmorStand.class, as -> {
             as.setInvisible(true);
             as.setMarker(true);
             as.setSmall(true);
@@ -267,7 +269,7 @@ public class RaceManager {
                         it.remove();
                         continue;
                     }
-                    stand.teleport(p.getLocation().add(0, 0.3, 0));
+                    stand.teleport(p.getLocation().add(0, 0, 0));
                 }
 
                 if (spectatorHeads.isEmpty()) {
@@ -287,8 +289,7 @@ public class RaceManager {
 
     public void cleanup() {
         playerProgress.clear();
-        if (castles != null)
-            castles.clear();
+        castles.clear();
 
         cleanupSpectatorHeads();
         if (spectatorHeadTask != null) {
@@ -306,7 +307,7 @@ public class RaceManager {
     }
 
     public int getTotalCastles() {
-        return castles != null ? castles.size() : 0;
+        return castles.size();
     }
 
     public PlayerCastle getCastle(int i) {
