@@ -30,7 +30,7 @@ public record CommandManager(GameManager gameManager) implements CommandExecutor
             case "settings" -> handleSettings(sender, args);
             case "time" -> handleTime(sender, args);
             case "tools" -> handleTools(sender, args);
-            case "build" -> handleBuild(sender);
+            case "build" -> handleBuild(sender, args);
             case "start" -> handleRaceStart(sender);
             case "end" -> handleEnd(sender);
             case "reset" -> handleReset();
@@ -159,13 +159,13 @@ public record CommandManager(GameManager gameManager) implements CommandExecutor
         }
     }
 
-    private void handleBuild(CommandSender sender) {
+    private void handleBuild(CommandSender sender, String[] args) {
         if (gameManager.getGameState() == GameState.BUILDING || gameManager.getGameState() == GameState.RACING) {
             sender.sendMessage(Component.text(languageManager.get("command.start.already_running"), NamedTextColor.RED));
             return;
         }
-
-        gameManager.startBuild();
+        boolean forceStart = args.length > 1 && args[1].equalsIgnoreCase("force") ;
+        gameManager.startBuild(forceStart);
     }
 
     private void handleRaceStart(CommandSender sender) {

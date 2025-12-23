@@ -1,16 +1,11 @@
 package com.hnp_arda.castlerush.core;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.hnp_arda.castlerush.managers.GameManager;
+import com.hnp_arda.castlerush.Main;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
 import java.io.File;
@@ -37,8 +32,7 @@ public class PlayerCastle {
         castleStart = castleEnd = world.getSpawnLocation().add(0.5, 1, 0.5);
     }
 
-    public void loadCastle(UUID uuid, Plugin plugin, GameManager gameManager) {
-
+    public void loadCastle(UUID uuid, Main plugin) {
         Player player = Bukkit.getPlayer(uuid);
         if (player == null) return;
 
@@ -53,10 +47,16 @@ public class PlayerCastle {
         castleStart = (Location) config.get("start");
         castleEnd = (Location) config.get("end");
 
-        List<MarkerSaveData> markersData = (List<MarkerSaveData>) config.get("markers");
-        markersData.forEach((markerSaveData) -> markers.add(markerSaveData.getMarker(gameManager)));
+        List<?> rawList = config.getList("markers");
+        if (rawList == null) return;
 
+        List<MarkerSaveData> markersData = new ArrayList<>();
 
+        for (Object o : rawList)
+            if (o instanceof MarkerSaveData m)
+                markersData.add(m);
+
+        markers.addAll(markersData.stream().map((markerSaveData) -> markerSaveData.getMarker(plugin.gameManager)).toList());
     }
 
     public void saveCastle(UUID uuid, Plugin plugin) {
@@ -75,75 +75,13 @@ public class PlayerCastle {
         List<MarkerSaveData> markersData = new ArrayList<>();
         markers.forEach(marker -> markersData.add(getMarkerSaveData(marker)));
 
-        config.set("markers", markers);
-
-/*
-        NamespacedKey key = new NamespacedKey(getPlugin(), "example-key"); // Create a NamespacedKey
-        World world = Bukkit.getServer().getWorlds().getFirst();
-
-        PersistentDataContainer pdc = world.getPersistentDataContainer();
-        pdc.set(key, PersistentDataType.STRING, "I love tacos!");
-*/
+        config.set("markers", markersData);
 
         try {
             config.save(saves);
         } catch (IOException e) {
-            plugin.getLogger().severe("Could not save castle.yml");
+            plugin.getLogger().severe("Could not save player castle! (" + player.getName() + ")\n\n" + e.getMessage());
         }
-    }
-
-    public String getSaveData2() {
-
-        Gson gson = new Gson();
-
-        String markersData = gson.toJson(markers);
-        String startData = gson.toJson(castleStart);
-        String endData = gson.toJson(castleStart);
-
-        JsonObject castleSaveData = new JsonObject();
-
-        castleSaveData.addProperty("markers", markersData);
-        castleSaveData.addProperty("star", startData);
-        castleSaveData.addProperty("end", endData);
-
-        return gson.toJson(castleSaveData);
-
-
-    }
-
-    public void saveCastleOld(UUID uuid, Plugin plugin) {
-        Player player = Bukkit.getPlayer(uuid);
-        if (player == null) return;
-
-        File savesDir = new File(plugin.getDataFolder(), "Castle Saves");
-        if (!savesDir.exists()) savesDir.mkdir();
-
-        File saves = new File(savesDir, player.getName() + "_castle.yml");
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(saves);
-
-        config.set("start", castleStart);
-        config.set("end", castleEnd);
-
-        try {
-            config.save(saves);
-        } catch (IOException e) {
-            plugin.getLogger().severe("Could not save castle.yml");
-        }
-    }
-
-    public void loadCastleold(UUID uuid, Plugin plugin) {
-
-        Player player = Bukkit.getPlayer(uuid);
-        if (player == null) return;
-
-        File savesDir = new File(plugin.getDataFolder(), "Castle Saves");
-        if (!savesDir.exists()) return;
-
-        File saves = new File(savesDir, player.getName() + "_castle.yml");
-        YamlConfiguration config = YamlConfiguration.loadConfiguration(saves);
-        castleStart = (Location) config.get("start");
-        castleEnd = (Location) config.get("end");
-
     }
 
     public void removeMarker(Marker removeMarker) {

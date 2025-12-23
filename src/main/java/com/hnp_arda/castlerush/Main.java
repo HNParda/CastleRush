@@ -1,5 +1,6 @@
 package com.hnp_arda.castlerush;
 
+import com.hnp_arda.castlerush.core.MarkerSaveData;
 import com.hnp_arda.castlerush.listeners.SpawnListener;
 import com.hnp_arda.castlerush.managers.CommandManager;
 import com.hnp_arda.castlerush.managers.GameManager;
@@ -11,6 +12,7 @@ import org.bukkit.block.data.type.Switch;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -34,11 +36,13 @@ public class Main extends JavaPlugin {
     public void onEnable() {
         getLogger().info("CaslteRush Plugin loaded!");
 
-        createSpawnWorld();
-
         gameManager = new GameManager(this);
 
         Objects.requireNonNull(getCommand("castlerush")).setExecutor(new CommandManager(gameManager));
+
+        createSpawnWorld();
+
+        ConfigurationSerialization.registerClass(MarkerSaveData.class);
 
         SpawnListener spawnListener = new SpawnListener(this, gameManager, spawnIsland);
         RaceListener raceListener = new RaceListener(gameManager);
@@ -73,20 +77,29 @@ public class Main extends JavaPlugin {
                 return;
             }
 
-            spawnIsland.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-            spawnIsland.setGameRule(GameRule.KEEP_INVENTORY, true);
-            spawnIsland.setGameRule(GameRule.DO_MOB_SPAWNING, false);
-            spawnIsland.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-            spawnIsland.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
-            spawnIsland.setGameRule(GameRule.PVP, true);
-            spawnIsland.setGameRule(GameRule.DISABLE_ELYTRA_MOVEMENT_CHECK, true);
-            spawnIsland.setGameRule(GameRule.DISABLE_PLAYER_MOVEMENT_CHECK, true);
-            spawnIsland.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
-            spawnIsland.setSpawnLocation(8, 80, 8, -45F);
-
             getLogger().info("CaslteRush Island created!");
         }
-        // spawnIsland.setTime(Time);
+
+        initWorldRules(spawnIsland);
+        spawnIsland.setSpawnLocation(8, 80, 8, -45F);
+
+    }
+
+    public void initWorldRules(World world) {
+
+        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRule.KEEP_INVENTORY, true);
+        world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
+        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
+        world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
+        world.setGameRule(GameRule.PVP, true);
+        world.setGameRule(GameRule.DISABLE_ELYTRA_MOVEMENT_CHECK, true);
+        world.setGameRule(GameRule.DISABLE_PLAYER_MOVEMENT_CHECK, true);
+        world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
+
+        world.setTime(6000);
+        world.setStorm(false);
+        world.setThundering(false);
 
     }
 
@@ -143,7 +156,7 @@ public class Main extends JavaPlugin {
 
         else if (loc.equals(addTimeBtnLoc)) updateTime(+5);
 
-        else if (loc.equals(buildBtnLoc)) gameManager.startBuild();
+        else if (loc.equals(buildBtnLoc)) gameManager.startBuild(false);
 
         else if (loc.equals(raceBtnLoc)) gameManager.startRace();
 

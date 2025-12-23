@@ -20,7 +20,6 @@ public class Marker {
         World world = location.getWorld();
         Material originalMaterial = world.getBlockAt(getLocation()).getType();
         setOriginalMaterial(originalMaterial);
-
     }
 
     public Marker(BaseTool tool, Location location, String advancedToolData) {

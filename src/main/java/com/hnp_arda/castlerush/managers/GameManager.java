@@ -7,8 +7,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
-import org.bukkit.persistence.PersistentDataContainer;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.codehaus.plexus.util.FileUtils;
 
@@ -80,11 +78,10 @@ public class GameManager {
         }
     }
 
-    public void startBuild() {
+    public void startBuild(boolean forceStart) {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
 
-        // if (players.size() < 2) {
-        if (false) {
+        if (players.size() < 2 && !forceStart) {
             Bukkit.broadcast(Component.text(languageManager.get("command.start.not_enough_players"), NamedTextColor.RED));
             return;
         }
@@ -123,18 +120,9 @@ public class GameManager {
                 continue;
             }
 
-            nether.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-            nether.setGameRule(GameRule.KEEP_INVENTORY, true);
-            nether.setGameRule(GameRule.DO_MOB_SPAWNING, false);
-            nether.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-            nether.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
-            world.setGameRule(GameRule.PVP, false);
-            world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-            world.setGameRule(GameRule.KEEP_INVENTORY, true);
-            world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
-            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-            world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
-            world.setGameRule(GameRule.PVP, false);
+
+            getPlugin().initWorldRules(world);
+            getPlugin().initWorldRules(nether);
 
             PlayerCastle playerCastle = new PlayerCastle(world, nether);
             playerCastles.put(player.getUniqueId(), playerCastle);
@@ -216,50 +204,13 @@ public class GameManager {
     }
 
     private void saveCastles() {
-
         playerCastles.forEach((uuid, playerCastle) -> playerCastle.saveCastle(uuid, getPlugin()));
-
-
-    }
-
-
-    private void saveCastles2() {
-        List<String> castlesData = new ArrayList<>();
-
-        // playerCastles.forEach((_ignored, playerCastle) -> castlesData.add(playerCastle.getSaveData()));
-        playerCastles.forEach((_ignored, playerCastle) -> {
-            String a = playerCastle.getSaveData2();
-            getPlugin().getLogger().info("aaa" + a);
-            castlesData.add(a);
-        });
-
-
-        NamespacedKey key = new NamespacedKey(getPlugin(), "example-key"); // Create a NamespacedKey
-        World world = Bukkit.getServer().getWorlds().getFirst();
-
-        PersistentDataContainer pdc = world.getPersistentDataContainer();
-        pdc.set(key, PersistentDataType.STRING, "I love tacos!");
-
-
-/*
-        File castlesData = new File(plugin.getDataFolder(), "Castles Data");
-
-
-        // Converts Java object to File
-        try (Writer writer = new FileWriter("staff.json")) {
-            gson.toJson(staff, writer);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }*/
-
     }
 
     protected void loadCastles() {
         if (!checkPlayers()) return;
-        playerCastles.forEach((uuid, castle) -> {
-            // castle.loadCastle()
-            castle.loadCastle(uuid, plugin, this);
-        });
+        playerCastles.forEach((uuid, castle) ->
+                castle.loadCastle(uuid, plugin));
     }
 
     private boolean checkPlayers() {

@@ -148,7 +148,7 @@ public abstract class BaseAdvancedTool extends BaseTool {
             if (existingMarker != null && existingMarker.getAdvancedToolData().equals(advacedToolData)) {
                 sendMarker(player, existingMarker.getLocation(), existingMarker.getDisplayMaterial().createBlockData());
             } else {
-                Marker marker = new Marker(this, loc.clone(), getTypeId());
+                Marker marker = new Marker(this, loc.clone(), advacedToolData);
                 playerCastle.addMarker(marker);
                 sendMarker(player, marker.getLocation(), marker.getDisplayMaterial().createBlockData());
             }
