@@ -42,7 +42,7 @@ public abstract class BaseAdvancedTool extends BaseTool {
 
     protected abstract Material getStartMaterial(Player player);
 
-    protected void interact(Player player, Location location, PlayerCastle playerCastle, String advacedToolData, Consumer<InteractResult> result) {
+    protected void interact(Player player, Location location, PlayerCastle playerCastle, String advancedToolData, Consumer<InteractResult> result) {
 
         Location start = getZoneStart(player);
 
@@ -60,8 +60,8 @@ public abstract class BaseAdvancedTool extends BaseTool {
         Marker startMarker = playerCastle.getLocation(start);
         Marker endMarker = playerCastle.getLocation(end);
 
-        boolean startInZone = startMarker != null && startMarker.getAdvancedToolData().equals(advacedToolData);
-        boolean endInZone = endMarker != null && endMarker.getAdvancedToolData().equals(advacedToolData);
+        boolean startInZone = startMarker != null && startMarker.getAdvancedToolData().equals(advancedToolData);
+        boolean endInZone = endMarker != null && endMarker.getAdvancedToolData().equals(advancedToolData);
 
         List<Location> regionBlocks = getBlocksBetween(start, end);
 
@@ -69,18 +69,18 @@ public abstract class BaseAdvancedTool extends BaseTool {
         if (startInZone && endInZone) {
             int removed = removeRegionMarkers(player, playerCastle, regionBlocks, getTypeId());
             player.sendMessage(Component.text(lang().get("tools.advanced_tool.removed", removed, getDisplayName()), NamedTextColor.YELLOW));
-            player.sendMessage(Component.text(lang().get("tools.advanced_tool.total", playerCastle.getAdvancedMarkers(advacedToolData).size()), NamedTextColor.GRAY));
+            player.sendMessage(Component.text(lang().get("tools.advanced_tool.total", playerCastle.getAdvancedMarker(advancedToolData).size()), NamedTextColor.GRAY));
             player.sendMessage(Component.text(""));
             result.accept(InteractResult.REMOVED);
             return;
         }
 
 
-        RegionChangeResult change = upsertRegionMarkers(player, playerCastle, regionBlocks, advacedToolData);
+        RegionChangeResult change = upsertRegionMarkers(player, playerCastle, regionBlocks, advancedToolData);
 
         player.sendMessage(Component.text(lang().get("tools.advanced_tool.end", getDisplayName(), formatLocation(location), getDisplayName()), NamedTextColor.RED));
         player.sendMessage(Component.text(lang().get("tools.advanced_tool.added", change.added(), getDisplayName()), NamedTextColor.RED));
-        player.sendMessage(Component.text(lang().get("tools.advanced_tool.total", playerCastle.getAdvancedMarkers(advacedToolData).size()), NamedTextColor.GRAY));
+        player.sendMessage(Component.text(lang().get("tools.advanced_tool.total", playerCastle.getAdvancedMarker(advancedToolData).size()), NamedTextColor.GRAY));
 
         if (change.replaced() > 0) {
             player.sendMessage(Component.text(lang().get("tools.advanced_tool.replaced_total", change.replaced()), NamedTextColor.YELLOW));
@@ -129,14 +129,14 @@ public abstract class BaseAdvancedTool extends BaseTool {
         return removed;
     }
 
-    protected RegionChangeResult upsertRegionMarkers(Player player, PlayerCastle playerCastle, List<Location> regionBlocks, String advacedToolData) {
+    protected RegionChangeResult upsertRegionMarkers(Player player, PlayerCastle playerCastle, List<Location> regionBlocks, String advancedToolData) {
         int added = 0;
         int replaced = 0;
         List<String> replacedTypes = new ArrayList<>();
 
         for (Location loc : regionBlocks) {
             Marker existingMarker = playerCastle.getLocation(loc);
-            if (existingMarker != null && !existingMarker.getAdvancedToolData().equals(advacedToolData)) {
+            if (existingMarker != null && !existingMarker.getAdvancedToolData().equals(advancedToolData)) {
                 playerCastle.removeMarker(existingMarker);
                 replaced++;
                 String replacedName = lang().get(existingMarker.getTranslationKey());
@@ -145,10 +145,10 @@ public abstract class BaseAdvancedTool extends BaseTool {
                 }
             }
 
-            if (existingMarker != null && existingMarker.getAdvancedToolData().equals(advacedToolData)) {
+            if (existingMarker != null && existingMarker.getAdvancedToolData().equals(advancedToolData)) {
                 sendMarker(player, existingMarker.getLocation(), existingMarker.getDisplayMaterial().createBlockData());
             } else {
-                Marker marker = new Marker(this, loc.clone(), advacedToolData);
+                Marker marker = new Marker(this, loc.clone(), advancedToolData);
                 playerCastle.addMarker(marker);
                 sendMarker(player, marker.getLocation(), marker.getDisplayMaterial().createBlockData());
             }
@@ -159,7 +159,7 @@ public abstract class BaseAdvancedTool extends BaseTool {
     }
 
     @Override
-    public boolean isReplacable() {
+    public boolean isReplaceable() {
         return false;
     }
 

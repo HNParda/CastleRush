@@ -1,20 +1,23 @@
 package com.hnp_arda.castlerush.core;
 
 import com.hnp_arda.castlerush.Main;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.World;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
+import java.util.Map;
 
-import static com.hnp_arda.castlerush.core.MarkerSaveData.getMarkerSaveData;
+import static com.hnp_arda.castlerush.Main.initWorldRules;
+import static com.hnp_arda.castlerush.managers.GameManager.languageManager;
 
 public class PlayerCastle {
 
@@ -25,63 +28,141 @@ public class PlayerCastle {
     public Location castleEnd;
 
 
-    public PlayerCastle(World world, World nether) {
-        this.world = world;
-        this.nether = nether;
+    public PlayerCastle(Player player, Main plugin) {
         this.markers = new ArrayList<>();
-        castleStart = castleEnd = world.getSpawnLocation().add(0.5, 1, 0.5);
+
+        world = loadWorld(player, plugin, false);
+        nether = loadWorld(player, plugin, true);
+
+        if (markers.isEmpty())
+            castleStart = castleEnd = world.getSpawnLocation().add(0.5, 1, 0.5);
     }
 
-    public void loadCastle(UUID uuid, Main plugin) {
-        Player player = Bukkit.getPlayer(uuid);
-        if (player == null) return;
+    private World loadWorld(Player player, Main plugin, boolean nether) {
 
-        File savesDir = new File(plugin.getDataFolder(), "Castle Saves");
-        if (!savesDir.exists()) return;
+        World w = loadExistingCastle(player, plugin, nether);
+        if (w == null) w = createNewCastle(player, nether);
 
-        File saves = new File(savesDir, player.getName() + "_castle.yml");
-        if (!saves.exists()) return;
+        if (w == null) {
+            player.sendMessage(Component.text(languageManager.get("world.world_create_failed"), NamedTextColor.RED));
+            throw new IllegalStateException("Could not create castle" + (nether ? "nether" : "world") + " for player " + player.getName() + "!");
+        }
+
+        initWorldRules(w);
+
+        return w;
+    }
+
+
+    private World loadExistingCastle(Player player, Main plugin, boolean nether) {
+
+        File playerDir = new File(new File(plugin.getDataFolder(), "Saves"), player.getName());
+        if (!playerDir.exists()) return null;
+
+        String name = "castle_rush_";
+        if (nether) name += "nether_";
+        name += player.getName();
+
+        File savedWorld = new File(playerDir, name);
+
+        if (!savedWorld.exists()) return null;
+
+        File worldContainer = plugin.getServer().getWorldContainer();
+
+        plugin.moveFolder(savedWorld, new File(worldContainer, name), "restore " + name);
+
+        World w = new WorldCreator(name).createWorld();
+
+        if (w != null && !nether) loadExistingCastleData(playerDir, plugin);
+
+        return w;
+    }
+
+    public void loadExistingCastleData(File playerDir, Main plugin) {
+
+        File saves = new File(playerDir, "castle.yml");
+        if (!saves.exists()) {
+            plugin.getLogger().info("Could not find castle.yml!");
+            return;
+        }
 
         YamlConfiguration config = YamlConfiguration.loadConfiguration(saves);
 
         castleStart = (Location) config.get("start");
         castleEnd = (Location) config.get("end");
 
-        List<?> rawList = config.getList("markers");
-        if (rawList == null) return;
+        @NotNull List<?> rawList = config.getList("markers", new ArrayList<>());
 
-        List<MarkerSaveData> markersData = new ArrayList<>();
+        plugin.getLogger().info(Arrays.toString(rawList.toArray()));
 
-        for (Object o : rawList)
-            if (o instanceof MarkerSaveData m)
-                markersData.add(m);
+        if (!rawList.isEmpty())
+            rawList.forEach((map) -> markers.add(Marker.constructFromSaveData(plugin.gameManager, (Map<?, ?>) map)));
 
-        markers.addAll(markersData.stream().map((markerSaveData) -> markerSaveData.getMarker(plugin.gameManager)).toList());
+        plugin.getLogger().info("Loaded existing Castle successfully!");
     }
 
-    public void saveCastle(UUID uuid, Plugin plugin) {
-        Player player = Bukkit.getPlayer(uuid);
-        if (player == null) return;
+    private World createNewCastle(Player player, boolean nether) {
 
-        File savesDir = new File(plugin.getDataFolder(), "Castle Saves");
-        if (!savesDir.exists()) savesDir.mkdir();
+        String name = "castle_rush_";
+        if (nether) name += "nether_";
+        name += player.getName();
 
-        File saves = new File(savesDir, player.getName() + "_castle.yml");
+        WorldCreator wc = new WorldCreator(name);
+
+        if (nether)
+            wc.environment(World.Environment.NETHER);
+        else {
+            wc.type(WorldType.FLAT);
+            wc.environment(World.Environment.NORMAL);
+            wc.generatorSettings("{\"layers\":[{\"block\":\"bedrock\",\"height\":1},{\"block\":\"stone\",\"height\":124},{\"block\":\"dirt\",\"height\":2},{\"block\":\"grass_block\",\"height\":1}],\"biome\":\"plains\"}");
+            wc.generateStructures(false);
+        }
+
+        return wc.createWorld();
+    }
+
+    public void saveCastle(String playerName, Main plugin, boolean force) {
+
+        saveMarkers(playerName, plugin);
+
+        File savesDir = new File(plugin.getDataFolder(), "Saves");
+        if (!savesDir.exists()) savesDir.mkdirs();
+
+        File playerDir = new File(savesDir, playerName);
+        if (!playerDir.exists()) playerDir.mkdirs();
+
+        boolean unloaded = Bukkit.unloadWorld(world, true) && Bukkit.unloadWorld(nether, true);
+        if (!unloaded && !force) return;
+
+        plugin.moveFolder(world.getWorldFolder(), new File(playerDir, world.getName()), "saving world " + playerName);
+        plugin.moveFolder(nether.getWorldFolder(), new File(playerDir, nether.getName()), "saving nether " + playerName);
+
+    }
+
+    public void saveMarkers(String playerName, Main plugin) {
+        File savesDir = new File(plugin.getDataFolder(), "Saves");
+        if (!savesDir.exists()) savesDir.mkdirs();
+
+        File playerDir = new File(savesDir, playerName);
+        if (!playerDir.exists()) playerDir.mkdirs();
+
+        File saves = new File(playerDir, "castle.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(saves);
 
         config.set("start", castleStart);
         config.set("end", castleEnd);
 
-        List<MarkerSaveData> markersData = new ArrayList<>();
-        markers.forEach(marker -> markersData.add(getMarkerSaveData(marker)));
+        List<Map<String, String>> markersData = new ArrayList<>();
+        markers.forEach(marker -> markersData.add(marker.getSaveData()));
 
         config.set("markers", markersData);
 
         try {
             config.save(saves);
         } catch (IOException e) {
-            plugin.getLogger().severe("Could not save player castle! (" + player.getName() + ")\n\n" + e.getMessage());
+            plugin.getLogger().severe("Could not save player castle! (" + playerName + ")\n\n" + e.getMessage());
         }
+
     }
 
     public void removeMarker(Marker removeMarker) {
@@ -96,7 +177,7 @@ public class PlayerCastle {
         return markers.stream().filter(marker -> marker.getTypeId().equalsIgnoreCase(typeId)).toList();
     }
 
-    public List<Marker> getAdvancedMarkers(String advancedToolData) {
+    public List<Marker> getAdvancedMarker(String advancedToolData) {
         return markers.stream().filter(marker -> marker.getAdvancedToolData().equals(advancedToolData)).toList();
     }
 
@@ -117,12 +198,11 @@ public class PlayerCastle {
     }
 
     public Location getStart() {
-        if (castleStart == null) return world.getSpawnLocation();
-        else return castleStart;
+        return castleStart;
     }
 
     public void setStart(Location newStart) {
-        if (newStart != null) world.setSpawnLocation(newStart);
+        world.setSpawnLocation(newStart.add(0.5, 1, 0.5));
         castleStart = newStart;
     }
 
@@ -130,7 +210,8 @@ public class PlayerCastle {
         return castleEnd;
     }
 
-    public void setEnd(Location newEnd) {
-        castleEnd = newEnd;
+    public void setEnd(@Nullable Location newEnd) {
+        if (newEnd == null) castleEnd = null;
+        else castleEnd = newEnd.add(0.5, 0, 0.5);
     }
 }

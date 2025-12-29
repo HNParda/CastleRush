@@ -1,6 +1,6 @@
 package com.hnp_arda.castlerush;
 
-import com.hnp_arda.castlerush.core.MarkerSaveData;
+import com.hnp_arda.castlerush.listeners.RaceListener;
 import com.hnp_arda.castlerush.listeners.SpawnListener;
 import com.hnp_arda.castlerush.managers.CommandManager;
 import com.hnp_arda.castlerush.managers.GameManager;
@@ -12,12 +12,13 @@ import org.bukkit.block.data.type.Switch;
 import org.bukkit.block.data.type.WallSign;
 import org.bukkit.block.sign.Side;
 import org.bukkit.block.sign.SignSide;
-import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.codehaus.plexus.util.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.Objects;
 
 public class Main extends JavaPlugin {
@@ -32,60 +33,7 @@ public class Main extends JavaPlugin {
     public GameManager gameManager;
     public World spawnIsland;
 
-    @Override
-    public void onEnable() {
-        getLogger().info("CaslteRush Plugin loaded!");
-
-        gameManager = new GameManager(this);
-
-        Objects.requireNonNull(getCommand("castlerush")).setExecutor(new CommandManager(gameManager));
-
-        createSpawnWorld();
-
-        ConfigurationSerialization.registerClass(MarkerSaveData.class);
-
-        SpawnListener spawnListener = new SpawnListener(this, gameManager, spawnIsland);
-        RaceListener raceListener = new RaceListener(gameManager);
-
-        getServer().getPluginManager().registerEvents(spawnListener, this);
-        getServer().getPluginManager().registerEvents(raceListener, this);
-
-        setupTimeControls();
-        setupGameControls();
-
-        getLogger().info("CaslteRush Plugin successfully enabled!");
-    }
-
-    private void createSpawnWorld() {
-        WorldCreator wc = new WorldCreator("castle_rush_spawn");
-
-        File worldFolder = new File(getServer().getWorldContainer(), "castle_rush_spawn");
-        if (worldFolder.exists()) {
-            spawnIsland = wc.createWorld();
-            getLogger().info("CaslteRush Island found and loaded.");
-        } else {
-            getLogger().info("CastleRush Island not found. Creating...");
-
-            wc.generator(new SpawnGenerator());
-            wc.environment(World.Environment.NORMAL);
-            wc.type(WorldType.NORMAL);
-            wc.generateStructures(false);
-            spawnIsland = wc.createWorld();
-
-            if (spawnIsland == null) {
-                getLogger().severe("Couldnt create new Spawn Island World!");
-                return;
-            }
-
-            getLogger().info("CaslteRush Island created!");
-        }
-
-        initWorldRules(spawnIsland);
-        spawnIsland.setSpawnLocation(8, 80, 8, -45F);
-
-    }
-
-    public void initWorldRules(World world) {
+    public static void initWorldRules(World world) {
 
         world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
         world.setGameRule(GameRule.KEEP_INVENTORY, true);
@@ -100,6 +48,58 @@ public class Main extends JavaPlugin {
         world.setTime(6000);
         world.setStorm(false);
         world.setThundering(false);
+
+    }
+
+    @Override
+    public void onEnable() {
+        getLogger().info("CastleRush Plugin enable!");
+
+        gameManager = new GameManager(this);
+
+        String CASTLERUSH_COMMAND = "CastleRush";
+        Objects.requireNonNull(getCommand(CASTLERUSH_COMMAND.toLowerCase())).setExecutor(new CommandManager(gameManager));
+
+        createSpawnWorld();
+
+        SpawnListener spawnListener = new SpawnListener(this, gameManager, spawnIsland);
+        RaceListener raceListener = new RaceListener(gameManager);
+
+        getServer().getPluginManager().registerEvents(spawnListener, this);
+        getServer().getPluginManager().registerEvents(raceListener, this);
+
+        setupTimeControls();
+        setupGameControls();
+
+        getLogger().info("CastleRush Plugin successfully loaded!");
+    }
+
+    private void createSpawnWorld() {
+        WorldCreator wc = new WorldCreator("castle_rush_spawn");
+
+        File storedFolder = new File(getDataFolder(), "castle_rush_spawn");
+
+        if (storedFolder.exists()) {
+            moveFolder(storedFolder, new File(getServer().getWorldContainer(), "castle_rush_spawn"), "restore spawn world");
+        } else {
+            getLogger().info("CastleRush Island not found. Creating...");
+
+            wc.generator(new SpawnGenerator());
+            wc.environment(World.Environment.NORMAL);
+            wc.type(WorldType.NORMAL);
+            wc.generateStructures(false);
+        }
+        spawnIsland = wc.createWorld();
+
+        if (spawnIsland == null) {
+            getLogger().severe("Couldn't create new Spawn Island World!");
+            return;
+        }
+
+        getLogger().info("CastleRush Island loaded!");
+
+        initWorldRules(spawnIsland);
+        spawnIsland.setSpawnLocation(8, 80, 8, -45F);
 
     }
 
@@ -205,9 +205,13 @@ public class Main extends JavaPlugin {
         spawnIsland.setBlockData(resetBtnLoc, resetBtn);
     }
 
+
+
     @Override
     public void onDisable() {
+        saveSpawn();
         if (gameManager != null) {
+            gameManager.saveCastles(true);
             gameManager.cleanup();
         }
         try {
@@ -215,7 +219,27 @@ public class Main extends JavaPlugin {
             FileUtils.deleteDirectory(languageDir);
         } catch (IOException ignored) {
         }
-        getLogger().info("CaslteRush Plugin deactivated! ");
+        getLogger().info("CastleRush Plugin deactivated! ");
+    }
+
+    private void saveSpawn() {
+        if (spawnIsland == null) return;
+
+        Bukkit.getOnlinePlayers().forEach(player -> {
+            if (player.getWorld() == spawnIsland) player.kick(Component.text("Server shutting off"));
+        });
+
+        File worldFolder = new File(getServer().getWorldContainer(), "castle_rush_spawn");
+        File targetFolder = new File(getDataFolder(), "castle_rush_spawn");
+        moveFolder(worldFolder, targetFolder, "store spawn world");
+    }
+
+    public void moveFolder(File source, File target, String reason) {
+        try {
+            Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        } catch (IOException e) {
+            getLogger().warning("ERROR MOVING FOLDER: " + reason);
+        }
     }
 
 }

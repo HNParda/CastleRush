@@ -42,7 +42,7 @@ public class EndTool extends BaseTool {
     }
 
     @Override
-    public boolean isReplacable() {
+    public boolean isReplaceable() {
         return false;
     }
 
@@ -76,7 +76,7 @@ public class EndTool extends BaseTool {
             PlayerCastle playerCastle = gameManager.getRaceManager().getCastle(castleIndex + 1);
             Location target = playerCastle.getEnd();
             if (target == null) return;
-            player.teleport(target.clone().add(0.5, 1, 0.5));
+            player.teleport(target);
             return;
         }
 

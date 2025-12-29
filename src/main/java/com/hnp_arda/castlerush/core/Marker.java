@@ -1,10 +1,15 @@
 package com.hnp_arda.castlerush.core;
 
+import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.tools.BaseTool;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Marker {
 
@@ -29,6 +34,18 @@ public class Marker {
 
     public static String formatLocation(Location loc) {
         return String.format("X:%d Y:%d Z:%d", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
+    }
+
+    public static Marker constructFromSaveData(GameManager gameManager, Map<?, ?> map) {
+        World world = Bukkit.getWorld((String) map.get("world"));
+        double x = Double.parseDouble((String) map.get("x"));
+        double y = Double.parseDouble((String) map.get("y"));
+        double z = Double.parseDouble((String) map.get("z"));
+
+        Location location = new Location(world, x, y, z);
+        BaseTool tool = gameManager.getToolsManager().getToolByTypeID((String) map.get("tool"));
+
+        return new Marker(tool, location, (String) map.get("advanced"));
     }
 
     public Location getLocation() {
@@ -81,7 +98,27 @@ public class Marker {
     }
 
     public boolean isReplaceable() {
-        return tool.isReplacable();
+        return tool.isReplaceable();
+    }
+
+    public Map<String, String> getSaveData() {
+
+        org.bukkit.Location location = getLocation();
+        String locationWorld = location.getWorld().getName();
+        String locationX = String.valueOf(location.getBlockX());
+        String locationY = String.valueOf(location.getBlockY());
+        String locationZ = String.valueOf(location.getBlockZ());
+        String tool = getTool().getTypeId();
+        String advancedToolData = getAdvancedToolData();
+
+        Map<String, String> map = new HashMap<>();
+        map.put("world", locationWorld);
+        map.put("x", locationX);
+        map.put("y", locationY);
+        map.put("z", locationZ);
+        map.put("tool", tool);
+        map.put("advanced", advancedToolData);
+        return map;
     }
 
     public BaseTool getTool() {

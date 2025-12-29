@@ -90,6 +90,7 @@ public class SpawnListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
+        if (gameManager.getGameState() != WAITING) return;
         if (spawnIsland != null) {
             Player player = event.getPlayer();
             player.setAllowFlight(true);
@@ -97,9 +98,9 @@ public class SpawnListener implements Listener {
             player.getInventory().clear();
             player.setExp(0);
             player.setLevel(0);
-            plugin.getLogger().info("CaslteRush JOINED " + player.getName());
-            player.teleport(spawnIsland.getSpawnLocation().add(.5, 0, .5));
-            player.setRespawnLocation(spawnIsland.getSpawnLocation().add(.5, 0, .5));
+            plugin.getLogger().info("CastleRush JOINED " + player.getName());
+            player.teleport(spawnIsland.getSpawnLocation().clone().add(.5, 0, .5));
+            player.setRespawnLocation(spawnIsland.getSpawnLocation().clone().add(.5, 0, .5));
         }
     }
 
@@ -109,7 +110,7 @@ public class SpawnListener implements Listener {
         if (gameManager.getGameState() != WAITING) return;
         if (event.getPlayer().getLocation().getWorld() != spawnIsland) return;
         event.getPlayer().setAllowFlight(true);
-        event.setRespawnLocation(spawnIsland.getSpawnLocation().add(.5, 0, .5));
+        event.setRespawnLocation(spawnIsland.getSpawnLocation().clone().add(.5, 0, .5));
     }
 
     @EventHandler

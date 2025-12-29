@@ -1,7 +1,6 @@
-error:
-  world_create_failed: "Deine Welt konnte nicht erstellt werden."
-
 game:
+  world_create_failed: "Deine Welt konnte nicht erstellt werden."
+  saves_data_not_matching: "Die Spieldaten entsprechen nicht den aktuell online Spielern oder sind beschädigt. Setze die Castles vor dem Start zurück oder erzwinge die aktuellen Daten mit \"/castlerush build force\""
   build_time_remaining: "Noch %d Minuten Bauzeit."
   build_phase_end: "Bauphase beendet."
   race_start: "Das Rennen beginnt! Viel Erfolg."
@@ -9,39 +8,65 @@ game:
 
 tools:
   only_players: "Nur Spieler können Tools bekommen."
-  no_game: "Kein Spiel läuft gerade."
+  no_game: "Es läuft gerade keine Bauphase."
   header: "--- Verfügbare Tools ---"
   unknown: "Unbekanntes Tool. Nutze: /castlerush help tools"
-  received: "%s Tool erhalten."
+  received: "%s-Tool erhalten."
+  single_marker: "Warnung: %s bei %s wurde entfernt."
+  not_replaceable: "%s kann hier nicht platziert werden; %s ist nicht ersetzbar."
   display: "Wird als %s angezeigt."
+  removed: "%s entfernt"
+  removed_detail: "%s entfernt bei %s"
+  placed: "%s platziert"
+  placed_detail: "%s platziert bei %s"
+  replaced: "Ersetzt durch %s."
+  replaced_detail: "%s-Block wurde durch %s bei %s ersetzt."
+
   start:
     name: "Start"
     cmd: "/castlerush tools start - Start-Tool"
-    info: "Rechtsklick auf einen Block = Start setzen."
+    info: "Rechtsklick auf einen Block, um den Start zu setzen."
     display: "Smaragdblock"
 
   end:
     name: "Ende"
-    cmd: "/castlerush tools end - Ende-Tool"
-    info: "Rechtsklick auf einen Block = Ende setzen."
+    cmd: "/castlerush tools end - End-Tool"
+    info: "Rechtsklick auf einen Block, um das Ende zu setzen."
     display: "Diamantblock"
 
   checkpoint:
     name: "Checkpoint"
     cmd: "/castlerush tools checkpoint - Checkpoint-Tool"
-    info: "Rechtsklick auf einen Block = Checkpoint setzen."
+    info: "Rechtsklick auf einen Block, um einen Checkpoint zu setzen."
     display: "Goldblock"
 
   deathzone:
-    name: "Deathzone"
-    cmd: "/castlerush tools deathzone - Deathzone-Tool"
-    info: "Rechtsklick auf einen Block = Deathzone setzen."
+    name: "Todeszone"
+    cmd: "/castlerush tools deathzone - Todeszonen-Tool"
+    info: "Rechtsklick auf einen Block, um eine Todeszone zu setzen."
     display: "Redstone-Blöcke und rotes Glas"
+
+  markers:
+    name: "Alle Marker anzeigen"
+    cmd: "/castlerush tools markers - Alle Marker anzeigen"
+    info: "Halten, um alle gesetzten Marker anzuzeigen."
+    display: "Goldbarren"
+
+  advanced_tool:
+    replaced: "Warnung: %s-Block wurde ersetzt."
+    replaced_total: "Warnung: %d andere Marker wurden ersetzt."
+    replaced_list: "Ersetzt: %s"
+    start: "Effektzonen-Start bei %s (%s)"
+    action_end: "%s START - klicke für ENDE"
+    removed: "Entfernt: %d %s-Blöcke."
+    total: "Gesamt: %d Blöcke"
+    end: "%s Ende bei %s (%s)"
+    added: "Hinzugefügt: %d %s."
 
   effect:
     name: "Effekt"
     cmd: "/castlerush tools effect - Effektzonen-Tool"
-    info: "Rechtsklick für Bereiche, Sneak-Rechtsklick um Effekt zu wählen, Linksklick um den Effekt selbst zu testen."
+    info: "Rechtsklick zum Bereich wählen; Shift-Rechtsklick, um einen Effekt zu wählen; Linksklick, um den gewählten Effekt selbst zu testen."
     display: "Farbige Wolle/Glas je nach Effekt"
     effect_control:
       level_down: "Level -"
@@ -50,38 +75,17 @@ tools:
     messages:
       gui_title: "Effekt wählen"
       not_selected: "Du hast noch keinen Effekt ausgewählt!"
-      selected: "Effekt gewählt: %s"
+      selected: "Gewählter Effekt: %s"
       applied: "%s angewendet (Lv.%d)"
       cleared: "%s entfernt"
     effects:
-      speed: "Speed"
+      speed: "Geschwindigkeit"
       slowness: "Langsamkeit"
       blindness: "Blindheit"
       jump_boost: "Sprungkraft"
       slow_falling: "Langsamer Fall"
       water_breathing: "Wasseratmung"
       nausea: "Übelkeit"
-
-  markers:
-    name: "Alle Marker anzeigen"
-    cmd: "/castlerush tools markers - Marker anzeigen"
-    info: "Halten um alle Marker zu sehen."
-    display: "Goldbarren"
-
-  advanced_tool:
-    removed_detail: "%s entfernt bei %s"
-    placed: "gesetzt"
-    placed_detail: "%s gesetzt bei %s"
-    blocked_existing: "%s kann hier nicht platziert werden; bereits als %s markiert."
-    replaced: "Warnung: %s Block wurde ersetzt."
-    replaced_total: "Warnung: %d andere Marker wurden ersetzt."
-    replaced_list: "Ersetzt: %s"
-    start: "Effektzone Start bei %s (%s)"
-    action_end: "%s START - klicke für ENDE"
-    removed: "%d %s Blöcke entfernt."
-    total: "Gesamt: %d Blöcke"
-    end: "%s Ende bei %s (%s)"
-    added: "%d %s hinzugefügt."
 
 
 command:
@@ -102,8 +106,8 @@ command:
     added: "Bauzeit um %d Minuten verlängert."
   start:
     already_running: "Ein Spiel läuft bereits."
-    not_running: "Es wurde noch keine Bauphase abgeschlossen."
-    no_players: "Keine Spieler online."
+    not_running: "Es läuft grad keine Bauphase."
+    not_enough_players: "Nicht genug Spieler online."
     header: "Castle Rush GESTARTET!"
     players: "Spieler: %d"
     time: "Bauzeit: %d Minuten"
@@ -120,11 +124,10 @@ command:
   help:
     header: "--- Castle Rush Befehle ---"
     settings: "/castlerush settings language <de | en | tr> | pvp <on | off> - Sprache ändern oder PVP umschalten"
-    time_set: "/castlerush time set <Minuten> - Bauzeit setzen"
-    time_add: "/castlerush time add <Minuten> - Zeit hinzufügen"
-    tools: "/castlerush tools <Tool> - Tool bekommen"
+    time_set: "/castlerush time <set | add> <Minuten> - Bauzeit setzen/Zeit hinzufügen"
+    tools: "/castlerush tools <tool> - Tool erhalten"
     start: "/castlerush build - Bauphase starten"
-    end: "/castlerush end - Phase beenden"
+    end: "/castlerush end - Spiel Phase beenden"
     reset: "/castlerush reset - Spiel zurücksetzen"
     info: "/castlerush info - Info anzeigen"
 
@@ -132,9 +135,8 @@ race:
   castle_missing: "Fehler: Castle konnte nicht gefunden werden."
   castle_header: "Castle %d/%d: %s"
   castle_complete: "%s hat %s's Castle in %d min %d sek abgeschlossen."
-  back_hint: "(Zum Zurückgehen ans Ende gehen)"
   checkpoint: "Checkpoint erreicht."
-  deathzone: "Deathzone! Zurück zum Checkpoint."
+  dead: "Tot! Zurück zum Checkpoint."
   all_finished: "%s hat ALLE Castles abgeschlossen."
   total_time: "Gesamtzeit: %d min %d sek"
   respawn_checkpoint: "Zurück zum letzten Checkpoint."

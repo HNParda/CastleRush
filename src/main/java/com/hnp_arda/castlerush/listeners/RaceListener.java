@@ -1,7 +1,8 @@
-package com.hnp_arda.castlerush;
+package com.hnp_arda.castlerush.listeners;
 
 import com.destroystokyo.paper.event.player.PlayerStartSpectatingEntityEvent;
 import com.destroystokyo.paper.event.player.PlayerStopSpectatingEntityEvent;
+import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.managers.GameManager.GameState;
 import com.hnp_arda.castlerush.managers.RaceManager;
@@ -14,8 +15,12 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
+
+import static com.hnp_arda.castlerush.managers.GameManager.GameState.BUILDING;
+import static com.hnp_arda.castlerush.managers.GameManager.GameState.RACING;
 
 public record RaceListener(GameManager gameManager) implements Listener {
 
@@ -46,6 +51,22 @@ public record RaceListener(GameManager gameManager) implements Listener {
 
     }
 
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        if (gameManager.getGameState() == BUILDING) {
+            Player player = event.getPlayer();
+            PlayerCastle playerCastle = gameManager.getPlayerCastle(player);
+            if (playerCastle == null) return;
+            player.teleport(playerCastle.getStart());
+            gameManager.getScoreboardManager().createScoreboard(player);
+        } else if (gameManager.getGameState() == RACING) {
+            Player player = event.getPlayer();
+            RaceManager.RaceProgress playerProgress = gameManager.getRaceManager().getPlayerProgress().getOrDefault(player.getUniqueId(), null);
+            if (playerProgress == null) return;
+            player.teleport(playerProgress.getLastCheckpoint());
+            gameManager.getScoreboardManager().updateScoreboard(player);
+        }
+    }
 
     @EventHandler
     public void onSpectate(PlayerStartSpectatingEntityEvent event) {
@@ -112,7 +133,7 @@ public record RaceListener(GameManager gameManager) implements Listener {
             if (targetLoc.getBlockY() < highestY - 5) {
                 Location surfaceLoc = new Location(world, to.getX(), highestY + 1, to.getZ());
                 event.setTo(surfaceLoc);
-                gameManager.getPlugin().getLogger().info("Portal korrigiert von Y:" + to.getBlockY() + " zu Y:" + (highestY + 1));
+                gameManager.getPlugin().getLogger().info("Portal corrected from Y:" + to.getBlockY() + " to Y:" + (highestY + 1));
             }
 
         } else {

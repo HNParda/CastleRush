@@ -1,7 +1,6 @@
-error:
-  world_create_failed: "Your world could not be created."
-
 game:
+  world_create_failed: "Your world could not be created."
+  saves_data_not_matching: "The Savedata does not equal the current online players or is corrupt. Reset the Castles before starting or force current saves with \"/castlerush build force\""
   build_time_remaining: "%d minutes of build time left."
   build_phase_end: "Build phase ended."
   race_start: "The race begins! Good luck."
@@ -9,9 +8,9 @@ game:
 
 tools:
   only_players: "Only players can receive tools."
-  no_game: "No game is running."
+  no_game: "No building phase is running."
   header: "--- Available tools ---"
-  unknown: "Unknown tool. Use: /castlerush help tools"
+  unknown: "Unknown tool. Use: /castlerush tools"
   received: "Received %s Tool."
   single_marker: "Warning: %s at %s got removed."
   not_replaceable: "%s cannot be placed here; %s is not replaceable."
@@ -107,8 +106,8 @@ command:
     added: "Build time extended by %d minutes."
   start:
     already_running: "A game is already running."
-    not_running: "There was no build phase yet."
-    not_enough_players: "There arent enough players online."
+    not_running: "You're not in the building phase."
+    not_enough_players: "There aren't enough players online."
     header: "Castle Rush STARTED!"
     players: "Players: %d"
     time: "Build time: %d minutes"
@@ -137,7 +136,6 @@ race:
   castle_missing: "Error: Castle could not be found."
   castle_header: "Castle %d/%d: %s"
   castle_complete: "%s completed %s's Castle in %d min %d sec."
-  back_hint: "(Walk to the end to go back)"
   checkpoint: "Checkpoint reached."
   dead: "Dead! Back to checkpoint."
   all_finished: "%s finished ALL Castles."

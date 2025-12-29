@@ -33,14 +33,14 @@ public class StartTool extends BaseTool {
         if (event.getClickedBlock() == null) return;
 
         interact(event.getPlayer(), playerCastle, getTypeId(), event.getClickedBlock().getLocation(), (result) -> {
-            if (result.equals(InteractResult.REMOVED)) playerCastle.setStart(null);
+            if (result.equals(InteractResult.REMOVED)) playerCastle.setStart(playerCastle.getCasleWorld().getSpawnLocation());
             else if (!result.equals(InteractResult.CANCELED))
                 playerCastle.setStart(event.getClickedBlock().getLocation());
         });
     }
 
     @Override
-    public boolean isReplacable() {
+    public boolean isReplaceable() {
         return false;
     }
 
@@ -71,7 +71,7 @@ public class StartTool extends BaseTool {
             PlayerCastle playerCastle = gameManager.getRaceManager().getCastle(castleIndex - 1);
             Location target = playerCastle.getEnd();
             if (target == null) return;
-            player.teleport(target.clone().add(0.5, 1, 0.5));
+            player.teleport(target);
             return;
         }
 

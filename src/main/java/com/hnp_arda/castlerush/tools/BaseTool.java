@@ -67,7 +67,7 @@ public abstract class BaseTool {
         playerCastle.getMarkers().stream().map(Marker::getTypeId).distinct().forEach(type -> revealMarkers(player, playerCastle, type));
     }
 
-    public boolean isReplacable() {
+    public boolean isReplaceable() {
         return true;
     }
 

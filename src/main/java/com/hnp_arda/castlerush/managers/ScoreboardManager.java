@@ -32,7 +32,7 @@ public class ScoreboardManager {
         Scoreboard scoreboard = manager.getNewScoreboard();
 
         Objective objective = scoreboard.registerNewObjective(
-                "castlerush",
+                "CastleRush",
                 Criteria.DUMMY,
                 Component.text(GameManager.getLanguageManager().get("scoreboard.title"), NamedTextColor.GOLD)
         );
@@ -48,7 +48,7 @@ public class ScoreboardManager {
         Scoreboard scoreboard = playerScoreboards.get(player.getUniqueId());
         if (scoreboard == null) return;
 
-        Objective objective = scoreboard.getObjective("castlerush");
+        Objective objective = scoreboard.getObjective("CastleRush");
         if (objective == null) return;
 
         for (String entry : new ArrayList<>(scoreboard.getEntries())) {

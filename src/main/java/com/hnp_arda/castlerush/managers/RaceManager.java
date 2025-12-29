@@ -1,7 +1,7 @@
 package com.hnp_arda.castlerush.managers;
 
-import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.core.Marker;
+import com.hnp_arda.castlerush.core.PlayerCastle;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
@@ -36,36 +36,28 @@ public class RaceManager {
         castles = new ArrayList<>();
     }
 
-    public void startRace(Set<UUID> participants) {
+    public void startRace(List<UUID> players) {
         playerProgress.clear();
         castles.clear();
         raceStartTime = System.currentTimeMillis();
         cleanupSpectatorHeads();
 
-        for (UUID uuid : participants) {
-            Player p = Bukkit.getPlayer(uuid);
-            if (p != null) {
-                PlayerCastle playerCastle = gameManager.getPlayerCastle(p);
-                if (playerCastle != null) {
-                    castles.add(playerCastle);
-                }
-            }
-        }
+        castles.addAll(gameManager.playerCastles.values());
 
         Collections.shuffle(castles);
 
-        for (UUID uuid : participants) {
+        players.forEach(uuid -> {
             Player player = Bukkit.getPlayer(uuid);
             if (player != null && !castles.isEmpty()) {
                 player.setGameMode(GameMode.SURVIVAL);
                 player.getInventory().clear();
 
                 RaceProgress progress = new RaceProgress();
-                playerProgress.put(uuid, progress);
+                playerProgress.put(player.getUniqueId(), progress);
 
                 teleportToStart(player, 0);
             }
-        }
+        });
     }
 
     public void teleportToStart(Player player, int castleIndex) {
@@ -85,18 +77,14 @@ public class RaceManager {
         }
 
         Location startLoc = playerCastle.getStart();
-        if (startLoc != null) {
-            startLoc = startLoc.clone().add(0.5, 1, 0.5);
-        } else {
-            startLoc = playerCastle.getCasleWorld().getSpawnLocation();
-        }
+
         teleporting.add(player.getUniqueId());
         player.teleport(startLoc);
         Bukkit.getScheduler().runTaskLater(gameManager.getPlugin(), () -> teleporting.remove(player.getUniqueId()), 100L);
 
         RaceProgress progress = playerProgress.get(player.getUniqueId());
         progress.startCastle(castleIndex);
-        progress.setCheckpoint(playerCastle.getCasleWorld().getSpawnLocation());
+        progress.setCheckpoint(playerCastle.getStart());
 
         String ownerName = getCastleOwnerName(playerCastle);
         String separator = "==============================";
@@ -166,15 +154,9 @@ public class RaceManager {
         if (playerCastle == null) return;
 
         Location respawn = progress.getLastCheckpoint();
-        if (respawn == null) {
-            respawn = playerCastle.getStart();
-        } else {
-            respawn = respawn.clone().add(0.5, 1, 0.5);
-        }
 
-        Location finalRespawn = respawn;
         Bukkit.getScheduler().runTask(gameManager.getPlugin(), () -> {
-            player.teleport(finalRespawn);
+            player.teleport(respawn);
             player.setHealth(Objects.requireNonNull(player.getAttribute(Attribute.MAX_HEALTH)).getValue());
             player.setFoodLevel(20);
             player.setFireTicks(0);
