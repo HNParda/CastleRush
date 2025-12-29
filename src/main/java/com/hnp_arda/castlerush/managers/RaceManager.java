@@ -123,7 +123,7 @@ public class RaceManager {
         if (oldMarker == null && newMarker == null) return;
 
         if (oldMarker != null && newMarker != null) {
-            if (oldMarker.isAdvancedToolMarker() && oldMarker.getAdvancedToolData().equals(newMarker.getAdvancedToolData()))
+            if (oldMarker.isZoneTool() && oldMarker.getAdditionalToolData().equals(newMarker.getAdditionalToolData()))
                 return;
             oldMarker.triggerMarkerExit(player);
             newMarker.triggerMarkerEnter(player);

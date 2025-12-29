@@ -45,16 +45,6 @@ public class StartTool extends BaseTool {
     }
 
     @Override
-    public void onSelect(Player player, PlayerCastle playerCastle) {
-        revealMarkers(player, playerCastle, getTypeId());
-    }
-
-    @Override
-    public void onDeselect(Player player, PlayerCastle playerCastle) {
-        hideMarkers(player, playerCastle, getTypeId());
-    }
-
-    @Override
     public Material getDisplayMaterial(World world, Marker marker) {
         return Material.EMERALD_BLOCK;
     }
@@ -74,7 +64,6 @@ public class StartTool extends BaseTool {
             player.teleport(target);
             return;
         }
-
 
         gameManager.getRaceManager().setCheckpoint(player, marker.getLocation());
     }

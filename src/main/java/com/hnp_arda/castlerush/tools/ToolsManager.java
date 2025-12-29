@@ -35,6 +35,7 @@ public class ToolsManager implements Listener {
         registerTool(new DeathzoneTool(gameManager));
         registerTool(new EffectTool(gameManager));
         registerTool(new MarkerViewerTool(gameManager));
+        registerTool(new TeleporterTool(gameManager));
     }
 
     private void registerTool(BaseTool tool) {
@@ -98,6 +99,16 @@ public class ToolsManager implements Listener {
         ItemStack prevItem = inv.getItem(event.getPreviousSlot());
         BaseTool prevTool = getTool(prevItem);
         if (prevTool != null) {
+
+            if (event.getPlayer().isSneaking()) {
+                int index = event.getNewSlot() - event.getPreviousSlot();
+                if (index != 0 && prevTool.scrollEvent(player, index)) {
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+
+
             PlayerCastle playerCastle = gameManager.getPlayerCastle(player);
             if (playerCastle != null) {
                 prevTool.onDeselect(player, playerCastle);

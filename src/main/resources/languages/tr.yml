@@ -49,10 +49,16 @@ tools:
   markers:
     name: "Tüm işaretleri göster"
     cmd: "/castlerush tools markers - Tüm işaretleri göster"
-    info: "Tüm yerleştirilmiş işaretleri önizlemek için basılı tut."
+    info: "Tüm yerleştirilmiş işaretleri önizlemek için elinde tut."
     display: "Altın Külçe"
 
-  advanced_tool:
+  teleporter:
+    name: "Işınlayıcı"
+    cmd: "/castlerush tools teleporter - Işınlayıcı aracı"
+    info: "Bir bloğa sol tıkla ve hedef seç. Bir bloğa sağ tıkla ve hedefe ışınlayan blok ayarla."
+    display: "Beacon"
+
+  zone_tool:
     replaced: "Uyarı: %s bloğu değiştirildi."
     replaced_total: "Uyarı: %d diğer işaret değiştirildi."
     replaced_list: "Değiştirilen: %s"

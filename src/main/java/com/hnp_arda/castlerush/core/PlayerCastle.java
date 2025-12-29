@@ -177,11 +177,11 @@ public class PlayerCastle {
         return markers.stream().filter(marker -> marker.getTypeId().equalsIgnoreCase(typeId)).toList();
     }
 
-    public List<Marker> getAdvancedMarker(String advancedToolData) {
-        return markers.stream().filter(marker -> marker.getAdvancedToolData().equals(advancedToolData)).toList();
+    public List<Marker> getZoneMarker(String additionalToolData) {
+        return markers.stream().filter(marker -> marker.getAdditionalToolData().equals(additionalToolData)).toList();
     }
 
-    public Marker getLocation(Location loc) {
+    public Marker getMarker(Location loc) {
         return markers.stream().filter(marker -> marker.getLocation().equals(loc)).findFirst().orElse(null);
     }
 

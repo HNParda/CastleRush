@@ -2,6 +2,7 @@ package com.hnp_arda.castlerush.core;
 
 import com.hnp_arda.castlerush.managers.GameManager;
 import com.hnp_arda.castlerush.tools.BaseTool;
+import com.hnp_arda.castlerush.tools.BaseZoneTool;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -16,7 +17,7 @@ public class Marker {
     private final Location location;
     private final BaseTool tool;
     private Material originalMaterial;
-    private String advancedToolData = "";
+    private String additionalToolData = "";
 
     public Marker(BaseTool tool, Location location) {
         this.location = location;
@@ -27,9 +28,9 @@ public class Marker {
         setOriginalMaterial(originalMaterial);
     }
 
-    public Marker(BaseTool tool, Location location, String advancedToolData) {
+    public Marker(BaseTool tool, Location location, String additionalToolData) {
         this(tool, location);
-        this.advancedToolData = advancedToolData;
+        this.additionalToolData = additionalToolData;
     }
 
     public static String formatLocation(Location loc) {
@@ -45,7 +46,7 @@ public class Marker {
         Location location = new Location(world, x, y, z);
         BaseTool tool = gameManager.getToolsManager().getToolByTypeID((String) map.get("tool"));
 
-        return new Marker(tool, location, (String) map.get("advanced"));
+        return new Marker(tool, location, (String) map.get("data"));
     }
 
     public Location getLocation() {
@@ -75,8 +76,8 @@ public class Marker {
         return tool.getDisplayMaterial(world, this);
     }
 
-    public String getAdvancedToolData() {
-        return advancedToolData;
+    public String getAdditionalToolData() {
+        return additionalToolData;
     }
 
     public boolean isAir() {
@@ -85,8 +86,8 @@ public class Marker {
         return m.isAir() || m == Material.AIR;
     }
 
-    public boolean isAdvancedToolMarker() {
-        return !getAdvancedToolData().isEmpty();
+    public boolean isZoneTool() {
+        return tool instanceof BaseZoneTool;
     }
 
     public void triggerMarkerEnter(Player player) {
@@ -109,7 +110,7 @@ public class Marker {
         String locationY = String.valueOf(location.getBlockY());
         String locationZ = String.valueOf(location.getBlockZ());
         String tool = getTool().getTypeId();
-        String advancedToolData = getAdvancedToolData();
+        String additionalToolData = getAdditionalToolData();
 
         Map<String, String> map = new HashMap<>();
         map.put("world", locationWorld);
@@ -117,11 +118,15 @@ public class Marker {
         map.put("y", locationY);
         map.put("z", locationZ);
         map.put("tool", tool);
-        map.put("advanced", advancedToolData);
+        map.put("data", additionalToolData);
         return map;
     }
 
     public BaseTool getTool() {
         return tool;
+    }
+
+    public void setAdditionalData(String additionalToolData) {
+        this.additionalToolData = additionalToolData;
     }
 }

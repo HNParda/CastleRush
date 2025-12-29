@@ -2,7 +2,7 @@ package com.hnp_arda.castlerush.tools.tools;
 
 import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.managers.GameManager;
-import com.hnp_arda.castlerush.tools.BaseAdvancedTool;
+import com.hnp_arda.castlerush.tools.BaseZoneTool;
 import com.hnp_arda.castlerush.core.Marker;
 import com.hnp_arda.castlerush.tools.tools.effect.*;
 import com.hnp_arda.castlerush.tools.tools.effect.Effect;
@@ -22,7 +22,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
-public class EffectTool extends BaseAdvancedTool implements Listener {
+public class EffectTool extends BaseZoneTool implements Listener {
 
     private final List<Effect> EFFECTS = new ArrayList<>();
     private final Map<UUID, EffectSelection> selections = new HashMap<>();
@@ -141,9 +141,9 @@ public class EffectTool extends BaseAdvancedTool implements Listener {
         EffectSelection selection = getSelection(player);
         if (selection == null) return;
 
-        String advancedToolData = String.format("%s;%s;%s", getTypeId(), selection.effect.getEffectName(), selection.amplifier);
+        String additionalToolData = String.format("%s;%s;%s", getTypeId(), selection.effect.getEffectName(), selection.amplifier);
 
-        interact(player, location, playerCastle, advancedToolData, result -> {
+        interact(player, location, playerCastle, additionalToolData, result -> {
         });
 
         player.sendMessage(Component.text(""));
@@ -229,8 +229,8 @@ public class EffectTool extends BaseAdvancedTool implements Listener {
     }
 
     private Effect getEffectByMarker(Marker marker) {
-        String advancedToolData = marker.getAdvancedToolData();
-        String[] data = advancedToolData.split(";");
+        String additionalToolData = marker.getAdditionalToolData();
+        String[] data = additionalToolData.split(";");
         return getEffectByMarkerData(data);
     }
 
@@ -241,8 +241,8 @@ public class EffectTool extends BaseAdvancedTool implements Listener {
     }
 
     private ActiveEffect getActiveEffectByMarkerData(Marker marker) {
-        String advancedToolData = marker.getAdvancedToolData();
-        String[] data = advancedToolData.split(";");
+        String additionalToolData = marker.getAdditionalToolData();
+        String[] data = additionalToolData.split(";");
         Effect effect = getEffectByMarkerData(data);
         return new ActiveEffect(effect, Integer.parseInt(data[2]));
     }

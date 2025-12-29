@@ -35,9 +35,11 @@ public abstract class BaseTool {
     public abstract void handleInteract(PlayerInteractEvent event, PlayerCastle playerCastle);
 
     public void onSelect(Player player, PlayerCastle playerCastle) {
+        revealMarkers(player, playerCastle, getTypeId());
     }
 
     public void onDeselect(Player player, PlayerCastle playerCastle) {
+        hideMarkers(player, playerCastle, getTypeId());
     }
 
     protected LanguageManager lang() {
@@ -78,7 +80,7 @@ public abstract class BaseTool {
     protected void interact(Player player, PlayerCastle playerCastle, String typeId, Location location, Consumer<InteractResult> result) {
 
         player.sendMessage("");
-        Marker existingAtLocation = playerCastle.getLocation(location);
+        Marker existingAtLocation = playerCastle.getMarker(location);
 
         if (existingAtLocation == null) {
             removeOldIfSingleMarker(player, playerCastle);
@@ -117,11 +119,12 @@ public abstract class BaseTool {
 
             if (result != null) result.accept(InteractResult.REPLACED);
         } else {
+            if (result != null) result.accept(InteractResult.REMOVED);
+
             player.sendActionBar(Component.text(lang().get("tools.removed", getDisplayName()), NamedTextColor.GOLD));
             player.sendMessage(Component.text(lang().get("tools.removed_detail", getDisplayName(), formatLocation(existingAtLocation.getLocation())), NamedTextColor.GREEN));
             playerCastle.removeMarker(existingAtLocation);
 
-            if (result != null) result.accept(InteractResult.REMOVED);
         }
 
         revealMarkers(player, playerCastle, getTypeId());
@@ -200,6 +203,10 @@ public abstract class BaseTool {
     public abstract void triggerExit(Player player);
 
     public boolean canLeftClick() {
+        return false;
+    }
+
+    public boolean scrollEvent(Player player, int index) {
         return false;
     }
 

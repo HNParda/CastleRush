@@ -52,7 +52,13 @@ tools:
     info: "Halten, um alle gesetzten Marker anzuzeigen."
     display: "Goldbarren"
 
-  advanced_tool:
+  teleporter:
+    name: "Teleporter"
+    cmd: "/castlerush tools teleporter - Teleporter-Tool"
+    info: "Linksklick auf einen Block, um das Ziel zu wählen. Rechtsklick auf einen Block, um einen Teleporter zum Ziel zu setzen."
+    display: "Beacon"
+
+  zone_tool:
     replaced: "Warnung: %s-Block wurde ersetzt."
     replaced_total: "Warnung: %d andere Marker wurden ersetzt."
     replaced_list: "Ersetzt: %s"

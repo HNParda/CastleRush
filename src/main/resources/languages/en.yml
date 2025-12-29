@@ -52,7 +52,13 @@ tools:
     info: "Hold to preview all placed markers."
     display: "Gold Ingot"
 
-  advanced_tool:
+  teleporter:
+    name: "Teleporter"
+    cmd: "/castlerush tools teleporter - Teleporter tool"
+    info: "Left-click a block to set destionation. Right-click a block to set a Teleporter to destination."
+    display: "Beacon"
+
+  zone_tool:
     replaced: "Warning: %s block was replaced."
     replaced_total: "Warning: %d other markers were replaced."
     replaced_list: "Replaced: %s"

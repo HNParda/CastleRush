@@ -2,7 +2,7 @@ package com.hnp_arda.castlerush.tools.tools;
 
 import com.hnp_arda.castlerush.core.PlayerCastle;
 import com.hnp_arda.castlerush.managers.GameManager;
-import com.hnp_arda.castlerush.tools.BaseAdvancedTool;
+import com.hnp_arda.castlerush.tools.BaseZoneTool;
 import com.hnp_arda.castlerush.core.Marker;
 import net.kyori.adventure.text.Component;
 import org.bukkit.GameMode;
@@ -12,7 +12,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.PlayerInteractEvent;
 
-public class DeathzoneTool extends BaseAdvancedTool {
+public class DeathzoneTool extends BaseZoneTool {
 
     public DeathzoneTool(GameManager gameManager) {
         super(gameManager);
@@ -35,9 +35,9 @@ public class DeathzoneTool extends BaseAdvancedTool {
         Player player = event.getPlayer();
         Location location = event.getClickedBlock().getLocation();
 
-        String advancedToolData = getTypeId();
+        String additionalToolData = getTypeId();
 
-        interact(player, location, playerCastle, advancedToolData, result -> {
+        interact(player, location, playerCastle, additionalToolData, result -> {
         });
 
         player.sendMessage(Component.text(""));

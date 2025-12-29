@@ -34,16 +34,6 @@ public class CheckpointTool extends BaseTool {
     }
 
     @Override
-    public void onSelect(Player player, PlayerCastle playerCastle) {
-        revealMarkers(player, playerCastle, getTypeId());
-    }
-
-    @Override
-    public void onDeselect(Player player, PlayerCastle playerCastle) {
-        hideMarkers(player, playerCastle, getTypeId());
-    }
-
-    @Override
     public Material getDisplayMaterial(World world, Marker marker) {
         return Material.GOLD_BLOCK;
     }
