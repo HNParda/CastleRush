@@ -7,7 +7,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
-import org.bukkit.GameRule;
+import org.bukkit.GameRules;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -59,8 +59,8 @@ public class GameManager {
 
     private void applyPvpRule(boolean enabled) {
         for (PlayerCastle playerCastle : playerCastles.values()) {
-            playerCastle.getCasleWorld().setGameRule(GameRule.PVP, enabled);
-            playerCastle.getCastleNether().setGameRule(GameRule.PVP, enabled);
+            playerCastle.getCasleWorld().setGameRule(GameRules.PVP, enabled);
+            playerCastle.getCastleNether().setGameRule(GameRules.PVP, enabled);
         }
     }
 

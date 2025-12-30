@@ -35,15 +35,15 @@ public class Main extends JavaPlugin {
 
     public static void initWorldRules(World world) {
 
-        world.setGameRule(GameRule.DO_IMMEDIATE_RESPAWN, true);
-        world.setGameRule(GameRule.KEEP_INVENTORY, true);
-        world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
-        world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        world.setGameRule(GameRule.DO_WEATHER_CYCLE, false);
-        world.setGameRule(GameRule.PVP, true);
-        world.setGameRule(GameRule.DISABLE_ELYTRA_MOVEMENT_CHECK, true);
-        world.setGameRule(GameRule.DISABLE_PLAYER_MOVEMENT_CHECK, true);
-        world.setGameRule(GameRule.SHOW_DEATH_MESSAGES, false);
+        world.setGameRule(GameRules.IMMEDIATE_RESPAWN, true);
+        world.setGameRule(GameRules.KEEP_INVENTORY, true);
+        world.setGameRule(GameRules.SPAWN_MOBS, false);
+        world.setGameRule(GameRules.ADVANCE_TIME, false);
+        world.setGameRule(GameRules.ADVANCE_WEATHER, false);
+        world.setGameRule(GameRules.PVP, true);
+        world.setGameRule(GameRules.ELYTRA_MOVEMENT_CHECK, false);
+        world.setGameRule(GameRules.PLAYER_MOVEMENT_CHECK, false);
+        world.setGameRule(GameRules.SHOW_DEATH_MESSAGES, false);
 
         world.setTime(6000);
         world.setStorm(false);
