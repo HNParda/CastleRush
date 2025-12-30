@@ -114,8 +114,7 @@ public class GameManager {
             player.setGameMode(GameMode.CREATIVE);
             giveGoldTools(player);
 
-            if (scoreboardManager != null)
-                scoreboardManager.createScoreboard(player);
+            if (scoreboardManager != null) scoreboardManager.createScoreboard(player);
 
         }
 
@@ -144,8 +143,7 @@ public class GameManager {
                     Bukkit.broadcast(Component.text(languageManager.get("game.build_time_remaining", (currentBuildTime / 60)), NamedTextColor.YELLOW));
                     players.forEach((uuid) -> {
                         Player player = Bukkit.getPlayer(uuid);
-                        if (player != null)
-                            playerCastles.get(uuid).saveMarkers(player.getName(), getPlugin());
+                        if (player != null) playerCastles.get(uuid).saveMarkers(player.getName(), getPlugin());
                     });
                 } else if (currentBuildTime <= 10) {
                     Bukkit.broadcast(Component.text(String.valueOf(currentBuildTime), NamedTextColor.RED));
@@ -187,21 +185,28 @@ public class GameManager {
     public void saveCastles(boolean force) {
 
         File savesDir = new File(plugin.getDataFolder(), "Saves");
-        if (!savesDir.exists()) savesDir.mkdirs();
+        if (!savesDir.exists()) if (!savesDir.mkdirs()) {
+            Bukkit.broadcast(Component.text(languageManager.get("game.save_error"), NamedTextColor.RED));
+            return;
+        }
 
         for (UUID uuid : players) {
             Player player = Bukkit.getPlayer(uuid);
             if (player == null) continue;
-            if (getPlugin().spawnIsland != null) {
-                player.teleport(getPlugin().spawnIsland.getSpawnLocation());
-                player.setGameMode(GameMode.SURVIVAL);
-                player.getInventory().clear();
-                player.setExp(0);
-                player.setLevel(0);
-            }
+            player.teleport(getPlugin().spawnIsland.getSpawnLocation());
+            player.setGameMode(GameMode.SURVIVAL);
+            player.getInventory().clear();
+            player.setExp(0);
+            player.setLevel(0);
+
 
             File playerDir = new File(savesDir, player.getName());
-            if (!playerDir.exists()) playerDir.mkdirs();
+            if (!playerDir.exists()) {
+                if (!playerDir.mkdirs()) {
+                    Bukkit.broadcast(Component.text(languageManager.get("game.save_error_player", player.getName()), NamedTextColor.RED));
+                    continue;
+                }
+            }
 
             PlayerCastle playerCastle = getPlayerCastle(player);
 
@@ -215,14 +220,15 @@ public class GameManager {
 
 
         File savesDir = new File(plugin.getDataFolder(), "Saves");
-        if (!savesDir.exists()) savesDir.mkdirs();
+        if (!savesDir.exists()) if (!savesDir.mkdirs()) return false;
 
         String[] saves = savesDir.list();
+        if (saves == null || saves.length == 0) return true;
         String[] currentPlayers = Bukkit.getOnlinePlayers().stream().map(Player::getName).toList().toArray(new String[0]);
 
         if (Arrays.equals(saves, currentPlayers)) return true;
 
-        Bukkit.broadcast(Component.text(languageManager.get("game.saves_data_not_matching"), NamedTextColor.RED));
+        Bukkit.broadcast(Component.text(languageManager.get("game.save_data_not_matching"), NamedTextColor.RED));
         return false;
 
     }

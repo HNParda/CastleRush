@@ -141,9 +141,9 @@ public class EffectTool extends BaseZoneTool implements Listener {
         EffectSelection selection = getSelection(player);
         if (selection == null) return;
 
-        String additionalToolData = String.format("%s;%s;%s", getTypeId(), selection.effect.getEffectName(), selection.amplifier);
+        String data = String.format("%s;%s;%s", getTypeId(), selection.effect.getEffectName(), selection.amplifier);
 
-        interact(player, location, playerCastle, additionalToolData, result -> {
+        interact(player, location, playerCastle, data, result -> {
         });
 
         player.sendMessage(Component.text(""));
@@ -229,9 +229,9 @@ public class EffectTool extends BaseZoneTool implements Listener {
     }
 
     private Effect getEffectByMarker(Marker marker) {
-        String additionalToolData = marker.getAdditionalToolData();
-        String[] data = additionalToolData.split(";");
-        return getEffectByMarkerData(data);
+        String data = marker.getData();
+        String[] dataArray = data.split(";");
+        return getEffectByMarkerData(dataArray);
     }
 
     private Effect getEffectByMarkerData(String[] data) {
@@ -241,10 +241,10 @@ public class EffectTool extends BaseZoneTool implements Listener {
     }
 
     private ActiveEffect getActiveEffectByMarkerData(Marker marker) {
-        String additionalToolData = marker.getAdditionalToolData();
-        String[] data = additionalToolData.split(";");
-        Effect effect = getEffectByMarkerData(data);
-        return new ActiveEffect(effect, Integer.parseInt(data[2]));
+        String data = marker.getData();
+        String[] dataArray = data.split(";");
+        Effect effect = getEffectByMarkerData(dataArray);
+        return new ActiveEffect(effect, Integer.parseInt(dataArray[2]));
     }
 
     private EffectSelection getSelection(Player player) {

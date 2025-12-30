@@ -35,9 +35,9 @@ public class DeathzoneTool extends BaseZoneTool {
         Player player = event.getPlayer();
         Location location = event.getClickedBlock().getLocation();
 
-        String additionalToolData = getTypeId();
+        String data = getTypeId();
 
-        interact(player, location, playerCastle, additionalToolData, result -> {
+        interact(player, location, playerCastle, data, result -> {
         });
 
         player.sendMessage(Component.text(""));

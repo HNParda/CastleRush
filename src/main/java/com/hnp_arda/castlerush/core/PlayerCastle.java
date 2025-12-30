@@ -6,13 +6,11 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.*;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -34,8 +32,7 @@ public class PlayerCastle {
         world = loadWorld(player, plugin, false);
         nether = loadWorld(player, plugin, true);
 
-        if (markers.isEmpty())
-            castleStart = castleEnd = world.getSpawnLocation().add(0.5, 1, 0.5);
+        if (markers.isEmpty()) castleStart = castleEnd = world.getSpawnLocation().add(0.5, 1, 0.5);
     }
 
     private World loadWorld(Player player, Main plugin, boolean nether) {
@@ -91,9 +88,7 @@ public class PlayerCastle {
         castleStart = (Location) config.get("start");
         castleEnd = (Location) config.get("end");
 
-        @NotNull List<?> rawList = config.getList("markers", new ArrayList<>());
-
-        plugin.getLogger().info(Arrays.toString(rawList.toArray()));
+        List<?> rawList = config.getList("markers", new ArrayList<>());
 
         if (!rawList.isEmpty())
             rawList.forEach((map) -> markers.add(Marker.constructFromSaveData(plugin.gameManager, (Map<?, ?>) map)));
@@ -109,8 +104,7 @@ public class PlayerCastle {
 
         WorldCreator wc = new WorldCreator(name);
 
-        if (nether)
-            wc.environment(World.Environment.NETHER);
+        if (nether) wc.environment(World.Environment.NETHER);
         else {
             wc.type(WorldType.FLAT);
             wc.environment(World.Environment.NORMAL);
@@ -126,10 +120,18 @@ public class PlayerCastle {
         saveMarkers(playerName, plugin);
 
         File savesDir = new File(plugin.getDataFolder(), "Saves");
-        if (!savesDir.exists()) savesDir.mkdirs();
+        if (!savesDir.exists()) if (!savesDir.mkdirs()) {
+            Bukkit.broadcast(Component.text(languageManager.get("game.save_error"), NamedTextColor.RED));
+            return;
+        }
 
         File playerDir = new File(savesDir, playerName);
-        if (!playerDir.exists()) playerDir.mkdirs();
+        if (!playerDir.exists()) {
+            if (!playerDir.mkdirs()) {
+                Bukkit.broadcast(Component.text(languageManager.get("game.save_error_player", playerName), NamedTextColor.RED));
+                return;
+            }
+        }
 
         boolean unloaded = Bukkit.unloadWorld(world, true) && Bukkit.unloadWorld(nether, true);
         if (!unloaded && !force) return;
@@ -141,10 +143,18 @@ public class PlayerCastle {
 
     public void saveMarkers(String playerName, Main plugin) {
         File savesDir = new File(plugin.getDataFolder(), "Saves");
-        if (!savesDir.exists()) savesDir.mkdirs();
+        if (!savesDir.exists()) if (!savesDir.mkdirs()) {
+            Bukkit.broadcast(Component.text(languageManager.get("game.save_error"), NamedTextColor.RED));
+            return;
+        }
 
         File playerDir = new File(savesDir, playerName);
-        if (!playerDir.exists()) playerDir.mkdirs();
+        if (!playerDir.exists()) {
+            if (!playerDir.mkdirs()) {
+                Bukkit.broadcast(Component.text(languageManager.get("game.save_error_player", playerName), NamedTextColor.RED));
+                return;
+            }
+        }
 
         File saves = new File(playerDir, "castle.yml");
         YamlConfiguration config = YamlConfiguration.loadConfiguration(saves);
@@ -177,8 +187,8 @@ public class PlayerCastle {
         return markers.stream().filter(marker -> marker.getTypeId().equalsIgnoreCase(typeId)).toList();
     }
 
-    public List<Marker> getZoneMarker(String additionalToolData) {
-        return markers.stream().filter(marker -> marker.getAdditionalToolData().equals(additionalToolData)).toList();
+    public List<Marker> getZoneMarker(String data) {
+        return markers.stream().filter(marker -> marker.getData().equals(data)).toList();
     }
 
     public Marker getMarker(Location loc) {

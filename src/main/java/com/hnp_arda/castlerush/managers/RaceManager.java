@@ -83,8 +83,7 @@ public class RaceManager {
         Bukkit.getScheduler().runTaskLater(gameManager.getPlugin(), () -> teleporting.remove(player.getUniqueId()), 100L);
 
         RaceProgress progress = playerProgress.get(player.getUniqueId());
-        progress.startCastle(castleIndex);
-        progress.setCheckpoint(playerCastle.getStart());
+        progress.startCastle(castleIndex, startLoc);
 
         String ownerName = getCastleOwnerName(playerCastle);
         String separator = "==============================";
@@ -123,7 +122,7 @@ public class RaceManager {
         if (oldMarker == null && newMarker == null) return;
 
         if (oldMarker != null && newMarker != null) {
-            if (oldMarker.isZoneTool() && oldMarker.getAdditionalToolData().equals(newMarker.getAdditionalToolData()))
+            if (oldMarker.isZoneTool() && oldMarker.getData().equals(newMarker.getData()))
                 return;
             oldMarker.triggerMarkerExit(player);
             newMarker.triggerMarkerEnter(player);
@@ -136,7 +135,9 @@ public class RaceManager {
 
         RaceProgress progress = playerProgress.get(player.getUniqueId());
 
+        location = location.clone().add(.5, 1, .5);
         Location lastCheckpoint = progress.getLastCheckpoint();
+
         if (lastCheckpoint == null || !lastCheckpoint.equals(location)) {
             progress.setCheckpoint(location);
             player.sendMessage(Component.text(languageManager.get("race.checkpoint"), NamedTextColor.GOLD));
@@ -162,7 +163,6 @@ public class RaceManager {
             player.setFireTicks(0);
             player.setFallDistance(0);
             player.setGameMode(GameMode.SURVIVAL);
-            gameManager.getPlugin().getLogger().info("death aa");
             player.sendMessage(Component.text(languageManager.get("race.dead"), NamedTextColor.RED));
         });
     }
@@ -310,10 +310,10 @@ public class RaceManager {
             this.finished = false;
         }
 
-        public void startCastle(int castleIndex) {
+        public void startCastle(int castleIndex, Location castleStart) {
             this.currentCastle = castleIndex;
             this.castleStartTime = System.currentTimeMillis();
-            this.lastCheckpoint = null;
+            this.lastCheckpoint = castleStart;
         }
 
         public long finishCastle() {
@@ -331,7 +331,7 @@ public class RaceManager {
         }
 
         public void setCheckpoint(Location checkpoint) {
-            this.lastCheckpoint = checkpoint.clone();
+            this.lastCheckpoint = checkpoint;
         }
 
         public Location getLastCheckpoint() {

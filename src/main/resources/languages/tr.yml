@@ -1,6 +1,8 @@
 game:
   world_create_failed: "Dünya oluşturulamadı."
-  saves_data_not_matching: "Kayıt verileri çevrimiçi oyuncularla eşleşmiyor veya bozuk. Başlamadan önce kaleleri sıfırla ya da \"/castlerush build force\" ile mevcut kayıtları zorla."
+  save_data_not_matching: "Kayıt verileri çevrimiçi oyuncularla eşleşmiyor veya bozuk. Başlamadan önce kaleleri sıfırla ya da \"/castlerush build force\" ile mevcut kayıtları zorla."
+  save_error: "HATA! Savedata klasörü oluşturulamadı."
+  save_error_player: "HATA! %s için Savedata oluşturulamadı."
   build_time_remaining: "%d dakika yapım süresi kaldı."
   build_phase_end: "Yapım aşaması bitti."
   race_start: "Yarış başlıyor! Bol şans."
@@ -57,6 +59,14 @@ tools:
     cmd: "/castlerush tools teleporter - Işınlayıcı aracı"
     info: "Bir bloğa sol tıkla ve hedef seç. Bir bloğa sağ tıkla ve hedefe ışınlayan blok ayarla."
     display: "Beacon"
+    messages:
+      add_new: "Yeni bir ışınlayıcı ekle"
+      select_add_new: "\"Yeni bir ışınlayıcı ekle\" seçmek için Shift + Kaydır"
+      updated_target: "Işınlayıcı hedefi %s konumundan %s konumuna güncellendi"
+      invalid_target: "Bu bloğu hedef olarak seçemezsin"
+      not_selected: "Önce bir hedef seçmelisin. (Sol tık)"
+      selected_target: "%s konumunda hedef seçildi"
+      selected: "Işınlayıcı seçildi "
 
   zone_tool:
     replaced: "Uyarı: %s bloğu değiştirildi."

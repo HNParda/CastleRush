@@ -17,23 +17,24 @@ public class Marker {
     private final Location location;
     private final BaseTool tool;
     private Material originalMaterial;
-    private String additionalToolData = "";
+    private String data;
 
     public Marker(BaseTool tool, Location location) {
+        this(tool, location, tool.getTypeId());
+    }
+
+    public Marker(BaseTool tool, Location location, String data) {
         this.location = location;
         this.tool = tool;
+        this.data = data;
 
         World world = location.getWorld();
         Material originalMaterial = world.getBlockAt(getLocation()).getType();
         setOriginalMaterial(originalMaterial);
     }
 
-    public Marker(BaseTool tool, Location location, String additionalToolData) {
-        this(tool, location);
-        this.additionalToolData = additionalToolData;
-    }
-
     public static String formatLocation(Location loc) {
+        if (loc == null) return "NULL";
         return String.format("X:%d Y:%d Z:%d", loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
     }
 
@@ -42,11 +43,11 @@ public class Marker {
         double x = Double.parseDouble((String) map.get("x"));
         double y = Double.parseDouble((String) map.get("y"));
         double z = Double.parseDouble((String) map.get("z"));
-
         Location location = new Location(world, x, y, z);
-        BaseTool tool = gameManager.getToolsManager().getToolByTypeID((String) map.get("tool"));
+        String data = (String) map.get("data");
+        BaseTool tool = gameManager.getToolsManager().getToolByTypeID(data.split(";")[0]);
 
-        return new Marker(tool, location, (String) map.get("data"));
+        return new Marker(tool, location, data);
     }
 
     public Location getLocation() {
@@ -76,8 +77,8 @@ public class Marker {
         return tool.getDisplayMaterial(world, this);
     }
 
-    public String getAdditionalToolData() {
-        return additionalToolData;
+    public String getData() {
+        return data;
     }
 
     public boolean isAir() {
@@ -109,24 +110,18 @@ public class Marker {
         String locationX = String.valueOf(location.getBlockX());
         String locationY = String.valueOf(location.getBlockY());
         String locationZ = String.valueOf(location.getBlockZ());
-        String tool = getTool().getTypeId();
-        String additionalToolData = getAdditionalToolData();
+        String data = getData();
 
         Map<String, String> map = new HashMap<>();
         map.put("world", locationWorld);
         map.put("x", locationX);
         map.put("y", locationY);
         map.put("z", locationZ);
-        map.put("tool", tool);
-        map.put("data", additionalToolData);
+        map.put("data", data);
         return map;
     }
 
-    public BaseTool getTool() {
-        return tool;
-    }
-
-    public void setAdditionalData(String additionalToolData) {
-        this.additionalToolData = additionalToolData;
+    public void setData(String data) {
+        this.data = data;
     }
 }

@@ -1,6 +1,8 @@
-game:
+﻿game:
   world_create_failed: "Deine Welt konnte nicht erstellt werden."
-  saves_data_not_matching: "Die Spieldaten entsprechen nicht den aktuell online Spielern oder sind beschädigt. Setze die Castles vor dem Start zurück oder erzwinge die aktuellen Daten mit \"/castlerush build force\""
+  save_data_not_matching: "Die Spieldaten entsprechen nicht den aktuell online Spielern oder sind beschädigt. Setze die Castles vor dem Start zurück oder erzwinge die aktuellen Daten mit \"/castlerush build force\""
+  save_error: "FEHLER! Konnte Savedata-Ordner nicht erstellen."
+  save_error_player: "FEHLER! Konnte Savedata für %s nicht erstellen."
   build_time_remaining: "Noch %d Minuten Bauzeit."
   build_phase_end: "Bauphase beendet."
   race_start: "Das Rennen beginnt! Viel Erfolg."
@@ -57,6 +59,14 @@ tools:
     cmd: "/castlerush tools teleporter - Teleporter-Tool"
     info: "Linksklick auf einen Block, um das Ziel zu wählen. Rechtsklick auf einen Block, um einen Teleporter zum Ziel zu setzen."
     display: "Beacon"
+    messages:
+      add_new: "Neuen Teleporter hinzufügen"
+      select_add_new: "Shift + Scroll, um \"Neuen Teleporter hinzuzufügen\" zu wählen"
+      updated_target: "Teleport-Ziel von %s zu %s aktualisiert"
+      invalid_target: "Dieser Block kann nicht als Ziel gewählt werden"
+      not_selected: "Du musst zuerst ein Ziel auswählen. (Linksklick)"
+      selected_target: "Ziel bei %s ausgewählt"
+      selected: "Teleporter ausgewählt "
 
   zone_tool:
     replaced: "Warnung: %s-Block wurde ersetzt."
